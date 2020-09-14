@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<! -- SDO Jobs by Sector Analysis A. Bickford 10/2020 -->
+<! -- Program provides look up Bar Chart of jobs data for County and Year -->
+<! -- reads jobs_by_sector table from Postgres database -->
+<! -- outputs County level bar chart and barchart race from 2010 to 2019 using D3 --> 
+<head>
+<title>Jobs By Sector</title>
+</head>
+<body>
+<h2>SDO Jobs by Sector Analysis</h2>
+<p></p>
+
+<div class = "entry">
+<form id="infoForm" onsubmit="return false">
+  <select id="selCty">
+    <option value="0">Colorado</option>
+  </select>
+  <select id="selYear">
+    <option>2010</option>
+  </select>
+  <button id="btnSave">Download Chart</button>
+  <button id="btnData">Download Data</button>
+</form>
+<p></p>
+<hr>
+Access the SDO Jobs by Sector(NAICS) <a href="https://demography.dola.colorado.gov/economy-labor-force/data/jobs-by-sector/#jobs-by-sector-naics" target="_blank"> data download page</a>
+<hr>
+</div>
+
+<div id= "chart"></div>
+    
+
+
+
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
+<script>
+//UTILITY FUNCTIONS
+
+//Join function from http://learnjsdata.com/combine_data.html
+
+function join(lookupTable, mainTable, lookupKey, mainKey, select) {
+    var l = lookupTable.length,
+        m = mainTable.length,
+        lookupIndex = [],
+        output = [];
+    for (var i = 0; i < l; i++) { // loop through l items
+        var row = lookupTable[i];
+        lookupIndex[row[lookupKey]] = row; // create an index for lookup table
+    }
+    for (var j = 0; j < m; j++) { // loop through m items
+        var y = mainTable[j];
+        var x = lookupIndex[y[mainKey]]; // get corresponding row from lookupTable
+        output.push(select(y, x)); // select only the columns you need
+    }
+    return output;
+}
+
+//genData processes the data for the static chart
+function genData(indata) {  
+
+// Creating color array  
+  var barColors = [{'sector_id' : '1000', 'job_title' : 'Agriculture', 'bar_color' : '#FF3333'},
+					{'sector_id' : '2000', 'job_title' : 'Mining', 'bar_color' : '#FF9933'},
+					{'sector_id' : '3000', 'job_title' : 'Utilities', 'bar_color' : '#FFFF33'},
+					{'sector_id' : '4000', 'job_title' : 'Construction', 'bar_color' : '#99FF33'},
+					{'sector_id' : '5000', 'job_title' : 'Manufacturing', 'bar_color' : '#33FF33'},
+					{'sector_id' : '6000', 'job_title' : 'Wholesale', 'bar_color' : '#33FF99'},
+					{'sector_id' : '7000', 'job_title' : 'Retail Trade', 'bar_color' : '#33FFFF'},
+					{'sector_id' : '8000', 'job_title' : 'Transportation & Warehousing', 'bar_color' : '#3399FF'},
+					{'sector_id' : '9000', 'job_title' : 'Information', 'bar_color' : '#3333FF'},
+					{'sector_id' : '10000', 'job_title' : 'Financial Activities', 'bar_color' : '#9933FF'},
+					{'sector_id' : '10150', 'job_title' : 'Real Estate', 'bar_color' : '#FF33FF'},
+					{'sector_id' : '11000', 'job_title' : 'Professional, Scientific & Technical', 'bar_color' : '#FF3399'},
+					{'sector_id' : '11025', 'job_title' : 'Management of Companies', 'bar_color' : '#990000'},
+					{'sector_id' : '11050', 'job_title' : 'Administrative & Support', 'bar_color' : '#994C00'},
+					{'sector_id' : '12000', 'job_title' : 'Private Education', 'bar_color' : '#4C9900'},
+					{'sector_id' : '12015', 'job_title' : 'Health Services', 'bar_color' : '#009900'},
+					{'sector_id' : '13000', 'job_title' : 'Arts, Entertainment & Recreation', 'bar_color' : '#00994C'},
+					{'sector_id' : '13015', 'job_title' : 'Accommodation & Food Services', 'bar_color' : '#009999'},
+					{'sector_id' : '14000', 'job_title' : 'Other Services', 'bar_color' : '#999000'},
+					{'sector_id' : '15010', 'job_title' : 'Federal Government', 'bar_color' : '#004C99'},
+					{'sector_id' : '15014', 'job_title' : 'Military', 'bar_color' : '#000099'},
+					{'sector_id' : '15020', 'job_title' : 'State Government', 'bar_color' : '#404040'},
+					{'sector_id' : '15030', 'job_title' : 'Local Government', 'bar_color' : '#A0A0A0'}];
+//joining color array to data set
+var outdata = join(barColors,indata,"sector_id","sector_id",function(dat,col){
+            return{
+			   area_code : dat.area_code,
+			   sector_id: dat.sector_id,
+			   county: dat.county,
+			   job_title: (col !== undefined) ? col.job_title : null,
+			   population_year: dat.population_year,
+			   total_jobs: dat.total_jobs,
+			   bar_color: (col !== undefined) ? col.bar_color : null
+			   };
+			   }).filter(function(d) {return d.job_title != null;})
+			     .filter(function(d) {return d.total_jobs > 0;});
+
+//  sorting data in descending order
+outdata.sort(function(a, b){ return d3.descending(+a['total_jobs'], +b['total_jobs']); })
+
+return outdata;
+} //end of genData
+
+function dataDownload(datain){
+    var seldFIPS = eval(d3.select("#selCty").property('value'));
+	var seldCTY = d3.select('#selCty option:checked').text();
+	var seldYEAR = eval(d3.select("#selYear").property('value'));
+	var fileName = "Jobs by Sector " + seldCTY + " " + seldYEAR + ".csv";
+
+	var datafiltered = datain.filter(function(d) {
+		 if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
+	 })
+	var dataOut = genData(datafiltered);
+	
+	dataOut.forEach(function(e){
+      if (typeof e === "object" ){
+          e["county_name"] = seldCTY;
+    }
+   });
+   
+      const dataOut2 = dataOut.map(item => ({
+		fips_code : item.area_code,
+		county: item.county_name,
+		job_category : item.job_title,
+		year: item.population_year,
+		jobs: item.total_jobs}));
+	 
+
+	exportToCsv(fileName, dataOut2);
+
+} //end of dataDownload
+
+function exportToCsv(filename, rows) {
+        var csvFile = d3.csvFormat(rows);
+
+        var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+        if (navigator.msSaveBlob) { // IE 10+
+            navigator.msSaveBlob(blob, filename);
+        } else {
+            var link = document.createElement("a");
+            if (link.download !== undefined) { // feature detection
+                // Browsers that support HTML5 download attribute
+                var url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+    }
+
+function downloadImage(outFileName) {
+      // Retrieve svg node
+	  const svg = d3.select("svg");
+      const svgNode = svg.node();
+
+
+        // Get image quality index (basically,  index you can zoom in)
+        const quality = 3;
+        // Create image
+        const image = new Image();
+        image.onload = () => {
+	   // Create image canvas
+          const canvas = document.createElement('canvas');
+          // Set width and height based on SVG node
+          const rect = svgNode.getBoundingClientRect();
+          canvas.width = rect.width * quality;
+          canvas.height = rect.height * quality;
+
+          // Draw background
+          const context = canvas.getContext('2d');
+          context.fillStyle = '#FAFAFA';
+          context.fillRect(0, 0, rect.width * quality, rect.height * quality);
+          context.drawImage(image, 0, 0, rect.width * quality, rect.height * quality);
+
+          // Set some image metadata
+          let dt = canvas.toDataURL('image/png');
+
+          // Invoke saving function
+          saveAs(dt, outFileName);
+
+        };
+
+
+        var url = 'data:image/svg+xml; charset=utf8, ' + encodeURIComponent(serializeString(svgNode));
+
+        image.src = url// URL.createObjectURL(blob);
+      
+
+      // This function invokes save window
+      function saveAs(uri, filename) {
+	  
+        // create link
+        var link = document.createElement('a');
+        if (typeof link.download === 'string') {
+          document.body.appendChild(link); // Firefox requires the link to be in the body
+          link.download = filename;
+          link.href = uri;
+          link.click();
+          document.body.removeChild(link); // remove the link when done
+        } else {
+          location.replace(uri);
+        }
+      }
+
+      // This function serializes SVG and sets all necessary attributes
+      function serializeString(svg) {
+	 
+        const xmlns = 'http://www.w3.org/2000/xmlns/';
+        const xlinkns = 'http://www.w3.org/1999/xlink';
+        const svgns = 'http://www.w3.org/2000/svg';
+        svg = svg.cloneNode(true);
+        const fragment = window.location.href + '#';
+        const walker = document.createTreeWalker(svg, NodeFilter.SHOW_ELEMENT, null, false);
+        while (walker.nextNode()) {
+          for (const attr of walker.currentNode.attributes) {
+            if (attr.value.includes(fragment)) {
+              attr.value = attr.value.replace(fragment, '#');
+            }
+          }
+        }
+        svg.setAttributeNS(xmlns, 'xmlns', svgns);
+        svg.setAttributeNS(xmlns, 'xmlns:xlink', xlinkns);
+        const serializer = new XMLSerializer();
+        const string = serializer.serializeToString(svg);
+        return string;
+      }
+    }
+
+
+//STATIC CHART FUNCTIONS
+//initialChart reads information from the dropdowns, updates the title block and calls genChart to produce the initial static chart
+function initialChart(datain) {  
+debugger;
+var seldFIPS = eval(d3.select("#selCty").property('value'));
+var seldCTY = d3.select('#selCty option:checked').text();;
+var seldYEAR = eval(d3.select("#selYear").property('value'))
+	    //Generate bar chart
+  var datafiltered = datain.filter(function(d) {
+                 if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
+             })
+  var  outData = genData(datafiltered);
+  genChart(outData,seldCTY,seldYEAR);
+} // initialChart
+
+//updateChart reads information from the dropdowns, updates the title block and generates the updated static chart
+function updateChart(datain) {
+ 
+var seldFIPS = eval(d3.select("#selCty").property('value'));
+var seldCTY = d3.select('#selCty option:checked').text();
+var seldYEAR = eval(d3.select("#selYear").property('value'));
+		 
+
+	    //Generate bar chart
+ var datafiltered = datain.filter(function(d) {
+                 if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
+             });
+  var  outData = genData(datafiltered);
+  upChart(outData,seldCTY,seldYEAR);
+} //updateChart
+
+//genChart produces the initial chart
+function genChart(outdata,CTY,YEAR){ 
+
+//Comma format
+var formatComma = d3.format(",d");
+//Date Format
+var formatDate = d3.timeFormat("%m/%d/%Y");
+//defining the SVG  
+ margin = ({top: 20, right: 210, bottom: 40, left: 40})
+
+    var width = 900,
+	height = 600,
+    barHeight = 12,
+	axisShift = 130;
+	
+
+
+var maxVal = d3.max(outdata, function(d) { return +d.total_jobs;} );
+var x_axis = d3.scaleLinear()
+                   .domain([0, maxVal])
+				   .range([0,(width - margin.right)]);
+
+var y_axis = d3.scaleBand()
+     .domain(outdata.map(d => d.job_title))
+	 .rangeRound([0,(barHeight * outdata.length)]);
+
+
+//Output code for chart 
+
+  var graph = d3.select("#chart")
+	     .append("svg")
+         .attr("viewBox", [0, 0, width, height]);
+
+//Title
+var titStr = "Jobs by Sector: " + CTY +", "+ YEAR;
+graph.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", margin.top + 10 )
+        .attr("text-anchor", "middle")  
+        .style("font", "16px sans-serif") 
+        .style("text-decoration", "underline")  
+        .text(titStr);
+
+var bar = graph.selectAll("g")
+                  .data(outdata)
+                  .enter()
+                  .append("g")
+                  .attr("transform", `translate(${margin.left + axisShift},50)`);
+
+bar.append("rect")
+       .attr("y", function(d) { return y_axis(d.job_title); })
+       .attr("width", function(d) { return x_axis(+d.total_jobs); })
+       .attr("height", barHeight)
+	   .style("fill", function(d) { return d.bar_color});
+
+bar.append("text")
+       .attr("x", function(d) { return x_axis(+d.total_jobs); })
+       .attr("y", function(d,i) {return y_axis(d.job_title) + 5; })
+       .attr("dy", ".35em")
+       .text(function(d) { return formatComma(+d.total_jobs); })
+	   .style("fill","black")
+	   .style("font", "9px sans-serif");
+
+//X- axis
+graph.append("g")
+      .attr("class","X-Axis")
+      .attr("transform", `translate(${margin.left + axisShift},${(barHeight + 2.2) * outdata.length})`)
+      .call(d3.axisBottom(x_axis));
+
+//Y-axis
+graph.append("g")
+      .attr("class","Y-Axis")
+      .attr("transform", `translate(${margin.left + axisShift},50)`)
+      .call(d3.axisLeft(y_axis));
+//caption
+var caption = "Source:  State Demography Office, Print date: "+ formatDate(new Date);
+graph.append("text")
+        .attr("x", (width - 250))             
+        .attr("y", height - (margin.bottom + 200) )
+        .attr("text-anchor", "right")  
+        .style("font", "9px sans-serif")   
+        .text(caption);
+
+return graph.node();
+ 
+}  //end of genChart
+
+//upChart  Selectes the svg, deletes is and replaces it with updated
+function upChart(outdata,CTY,YEAR) { 
+//Comma format
+var formatComma = d3.format(",d");
+//Date Format
+var formatDate = d3.timeFormat("%m/%d/%Y");
+ //defining the SVG  
+ margin = ({top: 20, right: 210, bottom: 40, left: 40})
+
+    var width = 900,
+	height = 600,
+    barHeight = 12,
+	axisShift = 130;
+ 
+ 
+ 
+ //Replacing existing svg// redefine the axes
+ 
+ var maxVal = d3.max(outdata, function(d) { return +d.total_jobs;} );
+var x_axis = d3.scaleLinear()
+                   .domain([0, maxVal])
+				   .range([0,(width - margin.right)]);
+
+var y_axis = d3.scaleBand()
+     .domain(outdata.map(d => d.job_title))
+	 .rangeRound([0,(barHeight * outdata.length)]);
+ 
+ var newGraph = d3.select("svg").remove();
+ var newGraph = d3.select("#chart")
+	     .append("svg")
+         .attr("viewBox", [0, 0, width, height]);
+ //Title
+var titStr = "Jobs by Sector: " + CTY +", "+ YEAR;
+newGraph.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", margin.top + 10 )
+        .attr("text-anchor", "middle")  
+        .style("font", "16px sans-serif") 
+        .style("text-decoration", "underline")  
+        .text(titStr);
+		
+ //New bars
+var bar = newGraph.selectAll("g")
+                  .data(outdata)
+                  .enter()
+                  .append("g")
+                  .attr("transform", `translate(${margin.left + axisShift},50)`);
+
+bar.append("rect")
+       .attr("y", function(d) { return y_axis(d.job_title); })
+       .attr("width", function(d) { return x_axis(+d.total_jobs); })
+       .attr("height", barHeight)
+	   .style("fill", function(d) { return d.bar_color});
+
+bar.append("text")
+       .attr("x", function(d) { return x_axis(+d.total_jobs); })
+       .attr("y", function(d,i) {return y_axis(d.job_title) + 5; })
+       .attr("dy", ".35em")
+       .text(function(d) { return formatComma(+d.total_jobs); })
+	   .style("fill","black")
+	   .style("font", "9px sans-serif");
+
+//X- axis
+newGraph.append("g")
+      .attr("class","X-Axis")
+      .attr("transform", `translate(${margin.left + axisShift},${(barHeight * outdata.length) + 52})`)
+      .call(d3.axisBottom(x_axis));
+
+//Y-axis
+newGraph.append("g")
+      .attr("transform", `translate(${margin.left + axisShift},50)`)
+      .call(d3.axisLeft(y_axis));
+
+//caption
+var caption = "Source:  State Demography Office, Print date: "+ formatDate(new Date);
+newGraph.append("text")
+       .attr("x", (width - 250))             
+        .attr("y", height - (margin.bottom + 200) )
+        .attr("text-anchor", "right")  
+        .style("font", "9px sans-serif")   
+        .text(caption);
+		
+return newGraph.node();
+ } //end of upChart
+ 
+ //MAIN PROGRAM
+
+ //Populate dropdowns
+ 
+//Counties
+var counties = [{'county': '', 'fips': ''},{'county':'Adams County', 'fips': '1'},{'county':'Alamosa County', 'fips': '3'},{'county':'Arapahoe County', 'fips': '5'},
+				{'county':'Archuleta County', 'fips': '7'},{'county':'Baca County', 'fips': '9'},{'county':'Bent County', 'fips': '11'},{'county':'Boulder County', 'fips': '13'},
+				{'county':'Broomfield County', 'fips': '14'},{'county':'Chaffee County', 'fips': '15'},{'county':'Cheyenne County', 'fips': '17'},{'county':'Clear Creek County', 'fips': '19'},
+				{'county':'Conejos County', 'fips': '21'},{'county':'Costilla County', 'fips': '23'},{'county':'Crowley County', 'fips': '25'},{'county':'Custer County', 'fips': '27'},
+				{'county':'Delta County', 'fips': '29'},{'county':'Denver County', 'fips': '31'},{'county':'Dolores County', 'fips': '33'},{'county':'Douglas County', 'fips': '35'},
+				{'county':'Eagle County', 'fips': '37'},{'county':'Elbert County', 'fips': '39'},{'county':'El Paso County', 'fips': '41'},{'county':'Fremont County', 'fips': '43'},
+				{'county':'Garfield County', 'fips': '45'},{'county':'Gilpin County', 'fips': '47'},{'county':'Grand County', 'fips': '49'},{'county':'Gunnison County', 'fips': '51'},
+				{'county':'Hinsdale County', 'fips': '53'},{'county':'Huerfano County', 'fips': '55'},{'county':'Jackson County', 'fips': '57'},{'county':'Jefferson County', 'fips': '59'},
+				{'county':'Kiowa County', 'fips': '61'},{'county':'Kit Carson County', 'fips': '63'},{'county':'Lake County', 'fips': '65'},{'county':'La Plata County', 'fips': '67'},
+				{'county':'Larimer County', 'fips': '69'},{'county':'Las Animas County', 'fips': '71'},{'county':'Lincoln County', 'fips': '73'},{'county':'Logan County', 'fips': '75'},
+				{'county':'Mesa County', 'fips': '77'},{'county':'Mineral County', 'fips': '79'},{'county':'Moffat County', 'fips': '81'},{'county':'Montezuma County', 'fips': '83'},
+				{'county':'Montrose County', 'fips': '85'},{'county':'Morgan County', 'fips': '87'},{'county':'Otero County', 'fips': '89'},{'county':'Ouray County', 'fips': '91'},
+				{'county':'Park County', 'fips': '93'},{'county':'Phillips County', 'fips': '95'},{'county':'Pitkin County', 'fips': '97'},{'county':'Prowers County', 'fips': '99'},
+				{'county':'Pueblo County', 'fips': '101'},{'county':'Rio Blanco County', 'fips': '103'},{'county':'Rio Grande County', 'fips': '105'},{'county':'Routt County', 'fips': '107'},
+				{'county':'Saguache County', 'fips': '109'},{'county':'San Juan County', 'fips': '111'},{'county':'San Miguel County', 'fips': '113'},{'county':'Sedgwick County', 'fips': '115'},
+				{'county':'Summit County', 'fips': '117'},{'county':'Teller County', 'fips': '119'},{'county':'Washington County', 'fips': '121'},{'county':'Weld County', 'fips': '123'},
+				{'county':'Yuma County', 'fips': '125'}];
+
+ d3.select("#selCty")
+    .selectAll('option')
+    .data(counties)
+    .enter()
+    .append('option')
+    .attr('value', d => d.fips) 
+    .text(d => d.county);
+
+//Main data read
+d3.csv("./data/jobs_by_sector.csv").then(function(indata){
+
+//Building Years dropdown
+
+var yrs = indata.map(function(d){return d.population_year;});
+var yrs = [...new Set(yrs)];
+var yrs2010 = yrs.filter(year => +year >= 2010);  
+
+d3.select("#selYear")
+				.selectAll('option')
+				.data(yrs2010)
+				.enter()
+				.append('option')
+				.attr('value', function(d) {return d;}) 
+				.text(function(d) {return d;});
+
+
+//The inital chart
+
+  initialChart(indata);
+
+//The onchange events
+d3.select("#selCty").on("change", function(d,i) {
+         updateChart(indata);
+	});
+
+d3.select("#selYear").on("change", function(d,i) {
+          updateChart(indata);
+	});
+
+//Button click events...
+
+d3.select("#btnData").on("click", function(event) {
+          event.preventDefault();
+          dataDownload(indata);
+	  
+ });
+ 
+ d3.select("#btnSave").on("click", function(event) {
+  event.preventDefault();
+  	var seldFIPS = eval(d3.select("#selCty").property('value'));
+	var seldCTY = d3.select('#selCty option:checked').text();
+	var seldYEAR = eval(d3.select("#selYear").property('value'));
+	var fileNamePNG = "Jobs by Sector "+seldCTY + " " + seldYEAR + ".png";
+	
+	downloadImage(fileNamePNG);
+    
+ });
+ }); //end program
+ 
+ 
+ 
+</script>
+
+</body>
