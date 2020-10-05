@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <! -- SDO Jobs by Sector Analysis A. Bickford 10/2020 -->
 <! -- Program provides look up Bar Chart of jobs data for County and Year -->
-<! -- reads jobs_by_sector table from Postgres database -->
-<! -- outputs County level bar chart and barchart race from 2010 to 2019 using D3 --> 
+<! -- reads jobs_by_sector table from local file -->
+<! -- outputs County level bar chart  --> 
 <head>
 <title>Jobs By Sector</title>
 </head>
+<style>
+ td, th {
+    padding: 1px 4px;
+    border: 1px black solid;
+}
+</style>
 <body>
 <h2>SDO Jobs by Sector Analysis</h2>
 <p></p>
@@ -13,17 +19,21 @@
 <div class = "entry">
 <form id="infoForm" onsubmit="return false">
   <select id="selCty">
-    <option value="0">Colorado</option>
+    <option value="000">Colorado</option>
   </select>
   <select id="selYear">
     <option>2010</option>
   </select>
+  <button id="btnCount">Jobs: Counts</button>
+  <button id="btnPercent"> Jobs: Percent</button>
+  <button id="btn5Year">5-Year Difference</button>
+  <button id="btn10Year">10-Year Difference</button>
   <button id="btnSave">Download Chart</button>
   <button id="btnData">Download Data</button>
 </form>
 <p></p>
 <hr>
-Access the SDO Jobs by Sector(NAICS) <a href="https://demography.dola.colorado.gov/economy-labor-force/data/jobs-by-sector/#jobs-by-sector-naics" target="_blank"> data download page</a>
+Access the SDO Jobs by Sector(NAICS) <a href="https://demography.dola.colorado.gov/economy-labor-force/data/jobs-by-sector/#jobs-by-sector-naics" target="_blank"> Data Download Page</a>
 <hr>
 </div>
 
@@ -32,7 +42,7 @@ Access the SDO Jobs by Sector(NAICS) <a href="https://demography.dola.colorado.g
 
 
 
-<script src="https://d3js.org/d3.v6.min.js"></script>
+<script src="https://d3js.org/d3.v6.min.js"></script>  
 
 <script>
 //UTILITY FUNCTIONS
@@ -59,32 +69,39 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
 //genData processes the data for the static chart
 function genData(indata) {  
 
-// Creating color array  
-  var barColors = [{'sector_id' : '1000', 'job_title' : 'Agriculture', 'bar_color' : '#FF3333'},
-					{'sector_id' : '2000', 'job_title' : 'Mining', 'bar_color' : '#FF9933'},
-					{'sector_id' : '3000', 'job_title' : 'Utilities', 'bar_color' : '#FFFF33'},
-					{'sector_id' : '4000', 'job_title' : 'Construction', 'bar_color' : '#99FF33'},
-					{'sector_id' : '5000', 'job_title' : 'Manufacturing', 'bar_color' : '#33FF33'},
-					{'sector_id' : '6000', 'job_title' : 'Wholesale', 'bar_color' : '#33FF99'},
-					{'sector_id' : '7000', 'job_title' : 'Retail Trade', 'bar_color' : '#33FFFF'},
-					{'sector_id' : '8000', 'job_title' : 'Transportation & Warehousing', 'bar_color' : '#3399FF'},
-					{'sector_id' : '9000', 'job_title' : 'Information', 'bar_color' : '#3333FF'},
-					{'sector_id' : '10000', 'job_title' : 'Financial Activities', 'bar_color' : '#9933FF'},
-					{'sector_id' : '10150', 'job_title' : 'Real Estate', 'bar_color' : '#FF33FF'},
-					{'sector_id' : '11000', 'job_title' : 'Professional, Scientific & Technical', 'bar_color' : '#FF3399'},
-					{'sector_id' : '11025', 'job_title' : 'Management of Companies', 'bar_color' : '#990000'},
-					{'sector_id' : '11050', 'job_title' : 'Administrative & Support', 'bar_color' : '#994C00'},
-					{'sector_id' : '12000', 'job_title' : 'Private Education', 'bar_color' : '#4C9900'},
-					{'sector_id' : '12015', 'job_title' : 'Health Services', 'bar_color' : '#009900'},
-					{'sector_id' : '13000', 'job_title' : 'Arts, Entertainment & Recreation', 'bar_color' : '#00994C'},
-					{'sector_id' : '13015', 'job_title' : 'Accommodation & Food Services', 'bar_color' : '#009999'},
-					{'sector_id' : '14000', 'job_title' : 'Other Services', 'bar_color' : '#999000'},
-					{'sector_id' : '15010', 'job_title' : 'Federal Government', 'bar_color' : '#004C99'},
-					{'sector_id' : '15014', 'job_title' : 'Military', 'bar_color' : '#000099'},
-					{'sector_id' : '15020', 'job_title' : 'State Government', 'bar_color' : '#404040'},
-					{'sector_id' : '15030', 'job_title' : 'Local Government', 'bar_color' : '#A0A0A0'}];
-//joining color array to data set
-var outdata = join(barColors,indata,"sector_id","sector_id",function(dat,col){
+// Creating label array  
+  var barLabels = [ { 'sector_id' : '00000', 'job_title' : 'Total Jobs'},
+                    { 'sector_id' : '01000', 'job_title' : 'Agriculture'},
+					{ 'sector_id' : '02000', 'job_title' : 'Mining'},
+					{ 'sector_id' : '03000', 'job_title' : 'Utilities'},
+					{ 'sector_id' : '04000', 'job_title' : 'Construction'},
+					{ 'sector_id' : '05000', 'job_title' : 'Manufacturing'},
+					{ 'sector_id' : '06000', 'job_title' : 'Wholesale Trade'},
+					{ 'sector_id' : '07000', 'job_title' : 'Retail Trade'},
+					{ 'sector_id' : '08000', 'job_title' : 'Transportation and Warehousing'},
+					{ 'sector_id' : '09000', 'job_title' : 'Information'},
+					{ 'sector_id' : '100000', 'job_title' : 'Financial Activities'},
+					{ 'sector_id' : '10150', 'job_title' : 'Real Estate'},
+					{ 'sector_id' : '11000', 'job_title' : 'Professional and Technical Services'},
+					{ 'sector_id' : '11025', 'job_title' : 'Management of Companies '},
+					{ 'sector_id' : '11050', 'job_title' : 'Administration and Waste'},
+					{ 'sector_id' : '12000', 'job_title' : 'Private Education'},
+					{ 'sector_id' : '12015', 'job_title' : 'Health Services'},
+					{ 'sector_id' : '13000', 'job_title' : 'Arts, Entertainment & Recreation'},
+					{ 'sector_id' : '13015', 'job_title' : 'Accommodation and Food'},
+					{ 'sector_id' : '14000', 'job_title' : 'Other Services'},
+					{ 'sector_id' : '15010', 'job_title' : 'Federal Government'},
+					{ 'sector_id' : '15014', 'job_title' : 'Military'},
+					{ 'sector_id' : '15020', 'job_title' : 'State Government'},
+					{ 'sector_id' : '15030', 'job_title' : 'Local Government'}];
+					
+var barColors = [ {'category' : 'Low', 'bar_color' : '#D85F02'},
+                  {'category' : 'Mid', 'bar_color' : '#757083'},
+				  {'category' : 'High', 'bar_color' : '#1B9E77'}
+				  ];
+				  
+//joining label array to data set
+var outdata = join(barLabels,indata,"sector_id","sector_id",function(dat,col){
             return{
 			   area_code : dat.area_code,
 			   sector_id: dat.sector_id,
@@ -92,12 +109,28 @@ var outdata = join(barColors,indata,"sector_id","sector_id",function(dat,col){
 			   job_title: (col !== undefined) ? col.job_title : null,
 			   population_year: dat.population_year,
 			   total_jobs: dat.total_jobs,
-			   bar_color: (col !== undefined) ? col.bar_color : null
+			   category : dat.category
+			   };
+			   }).filter(function(d) {return d.job_title != null;})
+			     .filter(function(d) {return d.total_jobs > 0;})
+				 .filter(function(d) {return d.sector_id != "00000";});
+				 
+var outdata = join(barColors,outdata,"category","category", function(dat,col){
+           return{
+			   area_code : dat.area_code,
+			   sector_id: dat.sector_id,
+			   county: dat.county,
+			   job_title: dat.job_title,
+			   population_year: dat.population_year,
+			   total_jobs: dat.total_jobs,
+			   category : dat.category,
+			   bar_color: (col !== undefined) ? col.bar_color : null  
 			   };
 			   }).filter(function(d) {return d.job_title != null;})
 			     .filter(function(d) {return d.total_jobs > 0;});
 
 //  sorting data in descending order
+
 outdata.sort(function(a, b){ return d3.descending(+a['total_jobs'], +b['total_jobs']); })
 
 return outdata;
@@ -232,53 +265,313 @@ function downloadImage(outFileName) {
     }
 
 
+function jobsHdr(indata,yr){
+
+//Comma format
+var formatComma = d3.format(",.2f");
+//Dollar Format
+var formatDecimalComma = d3.format(",.0f");
+var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
+var jobsN = +indata[0].sum_jobs;
+var wageN = +indata[0].total_wage;
+
+//round jobs value and output string
+if(jobsN >= 1000000) {
+   var jobFrac = jobsN/1000000;
+   var jobVal = formatComma(jobFrac.toFixed(2));
+   var jobStr = jobVal + " Million Total Estimated Jobs";
+ } else {
+       var jobStr = formatDecimalComma(jobsN) + " Total Estimated Jobs";
+	}
+ 
+var wageVal = formatDollar(wageN);
+var wageStr = wageVal + " Average Annual Wage";
+var yrStr = yr + " Employment Share by Wage";
+
+var outArr = [jobStr, wageStr, yrStr];
+
+return outArr;
+}
+
+
+function switchFIPS(county){
+   switch(county){
+		case "Adams County":	
+		fips = "001";	
+		break;
+		case "Alamosa County":	
+		fips = "003";	
+		break;
+		case "Arapahoe County":	
+		fips = "005";	
+		break;
+		case "Archuleta County":	
+		fips = "007";	
+		break;
+		case "Baca County":	
+		fips = "009";	
+		break;
+		case "Bent County":	
+		fips = "011";	
+		break;
+		case "Boulder County":	
+		fips = "013";	
+		break;
+		case "Broomfield County":	
+		fips = "014";	
+		break;
+		case "Chaffee County":	
+		fips = "015";	
+		break;
+		case "Cheyenne County":	
+		fips = "017";	
+		break;
+		case "Clear Creek County":	
+		fips = "019";	
+		break;
+		case "Conejos County":	
+		fips = "021";	
+		break;
+		case "Costilla County":	
+		fips = "023";	
+		break;
+		case "Crowley County":	
+		fips = "025";	
+		break;
+		case "Custer County":	
+		fips = "027";	
+		break;
+		case "Delta County":	
+		fips = "029";	
+		break;
+		case "Denver County":	
+		fips = "031";	
+		break;
+		case "Dolores County":	
+		fips = "033";	
+		break;
+		case "Douglas County":	
+		fips = "035";	
+		break;
+		case "Eagle County":	
+		fips = "037";	
+		break;
+		case "Elbert County":	
+		fips = "039";	
+		break;
+		case "El Paso County":	
+		fips = "041";	
+		break;
+		case "Fremont County":	
+		fips = "043";	
+		break;
+		case "Garfield County":	
+		fips = "045";	
+		break;
+		case "Gilpin County":	
+		fips = "047";	
+		break;
+		case "Grand County":	
+		fips = "049";	
+		break;
+		case "Gunnison County":	
+		fips = "051";	
+		break;
+		case "Hinsdale County":	
+		fips = "053";	
+		break;
+		case "Huerfano County":	
+		fips = "055";	
+		break;
+		case "Jackson County":	
+		fips = "057";	
+		break;
+		case "Jefferson County":	
+		fips = "059";	
+		break;
+		case "Kiowa County":	
+		fips = "061";	
+		break;
+		case "Kit Carson County":	
+		fips = "063";	
+		break;
+		case "Lake County":	
+		fips = "065";	
+		break;
+		case "La Plata County":	
+		fips = "067";	
+		break;
+		case "Larimer County":	
+		fips = "069";	
+		break;
+		case "Las Animas County":	
+		fips = "071";	
+		break;
+		case "Lincoln County":	
+		fips = "073";	
+		break;
+		case "Logan County":	
+		fips = "075";	
+		break;
+		case "Mesa County":	
+		fips = "077";	
+		break;
+		case "Mineral County":	
+		fips = "079";	
+		break;
+		case "Moffat County":	
+		fips = "081";	
+		break;
+		case "Montezuma County":	
+		fips = "083";	
+		break;
+		case "Montrose County":	
+		fips = "085";	
+		break;
+		case "Morgan County":	
+		fips = "087";	
+		break;
+		case "Otero County":	
+		fips = "089";	
+		break;
+		case "Ouray County":	
+		fips = "091";	
+		break;
+		case "Park County":	
+		fips = "093";	
+		break;
+		case "Phillips County":	
+		fips = "095";	
+		break;
+		case "Pitkin County":	
+		fips = "097";	
+		break;
+		case "Prowers County":	
+		fips = "099";	
+		break;
+		case "Pueblo County":	
+		fips = "101";	
+		break;
+		case "Rio Blanco County":	
+		fips = "103";	
+		break;
+		case "Rio Grande County":	
+		fips = "105";	
+		break;
+		case "Routt County":	
+		fips = "107";	
+		break;
+		case "Saguache County":	
+		fips = "109";	
+		break;
+		case "San Juan County":	
+		fips = "111";	
+		break;
+		case "San Miguel County":	
+		fips = "113";	
+		break;
+		case "Sedgwick County":	
+		fips = "115";	
+		break;
+		case "Summit County":	
+		fips = "117";	
+		break;
+		case "Teller County":	
+		fips = "119";	
+		break;
+		case "Washington County":	
+		fips = "121";	
+		break;
+		case "Weld County":	
+		fips = "123";	
+		break;
+		case "Yuma County":	
+		fips = "125";	
+		break;
+		case "Colorado":	
+		fips = "000";	
+		break;
+}
+return fips;
+}
+
+
 //STATIC CHART FUNCTIONS
 //initialChart reads information from the dropdowns, updates the title block and calls genChart to produce the initial static chart
 function initialChart(datain) {  
-debugger;
-var seldFIPS = eval(d3.select("#selCty").property('value'));
-var seldCTY = d3.select('#selCty option:checked').text();;
+
+
+var seldCTY = d3.select('#selCty option:checked').text();
+var seldFIPS = switchFIPS(seldCTY);
 var seldYEAR = eval(d3.select("#selYear").property('value'))
 	    //Generate bar chart
   var datafiltered = datain.filter(function(d) {
                  if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
              })
   var  outData = genData(datafiltered);
-  genChart(outData,seldCTY,seldYEAR);
+//Reading the range data, the tabular data...
+
+d3.csv("./data/wage_summ.csv").then(function(rngdata){ 
+
+  var  tabData = rngdata.filter(function(d) {
+                     if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
+                 });
+
+  genChart(outData,tabData,seldCTY,seldYEAR);
+  				 });  //d3.csv
 } // initialChart
 
 //updateChart reads information from the dropdowns, updates the title block and generates the updated static chart
 function updateChart(datain) {
- 
-var seldFIPS = eval(d3.select("#selCty").property('value'));
-var seldCTY = d3.select('#selCty option:checked').text();
-var seldYEAR = eval(d3.select("#selYear").property('value'));
-		 
 
+var seldCTY = d3.select('#selCty option:checked').text();
+var seldFIPS = switchFIPS(seldCTY);
+var seldYEAR = eval(d3.select("#selYear").property('value'));
+// Removes the chart
+
+var graph = d3.select("svg").remove();
 	    //Generate bar chart
  var datafiltered = datain.filter(function(d) {
                  if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
              });
   var  outData = genData(datafiltered);
-  upChart(outData,seldCTY,seldYEAR);
+  
+  d3.csv("./data/wage_summ.csv").then(function(rngdata){ 
+
+  var  tabData = rngdata.filter(function(d) {
+                     if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
+                 });
+
+  genChart(outData,tabData,seldCTY,seldYEAR);
+  				 });  //d3.csv
+ 
 } //updateChart
 
-//genChart produces the initial chart
-function genChart(outdata,CTY,YEAR){ 
+
+
+//genChart produces the Total Jobs chart
+function genChart(outdata,tabdata,CTY,YEAR){ 
 
 //Comma format
 var formatComma = d3.format(",d");
+//Dollar Format
+var formatDecimalComma = d3.format(",.0f");
+var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
 //Date Format
 var formatDate = d3.timeFormat("%m/%d/%Y");
+//Percentage Format
+var formatPercent = d3.format(".1%")
 //defining the SVG  
  margin = ({top: 20, right: 210, bottom: 40, left: 40})
 
     var width = 900,
 	height = 600,
-    barHeight = 12,
+    barHeight = 8,
+	barSpace = 4,
 	axisShift = 130;
 	
 
+var yLen = (barHeight + barSpace) * (outdata.length);
 
 var maxVal = d3.max(outdata, function(d) { return +d.total_jobs;} );
 var x_axis = d3.scaleLinear()
@@ -287,7 +580,7 @@ var x_axis = d3.scaleLinear()
 
 var y_axis = d3.scaleBand()
      .domain(outdata.map(d => d.job_title))
-	 .rangeRound([0,(barHeight * outdata.length)]);
+	 .rangeRound([0,yLen]);
 
 
 //Output code for chart 
@@ -329,7 +622,7 @@ bar.append("text")
 //X- axis
 graph.append("g")
       .attr("class","X-Axis")
-      .attr("transform", `translate(${margin.left + axisShift},${(barHeight + 2.2) * outdata.length})`)
+      .attr("transform", `translate(${margin.left + axisShift},${yLen + 50})`)
       .call(d3.axisBottom(x_axis));
 
 //Y-axis
@@ -337,125 +630,118 @@ graph.append("g")
       .attr("class","Y-Axis")
       .attr("transform", `translate(${margin.left + axisShift},50)`)
       .call(d3.axisLeft(y_axis));
+	  
+
+//Legend
+var legend = graph.selectAll(".legend")
+	.data(tabdata)
+	.enter()
+	.append("g")
+	.attr("class","legend");
+	
+var rects = legend.append('rect')
+	.attr("width",10)
+	.attr("height",10)
+	.attr("transform", function(d,i) {
+	        var horz = 170 + (i * 120);
+			var vert = yLen + 70;
+			return 'translate(' + horz + ',' + vert + ')';
+			})
+	.attr("fill", function(d) { return d.leg_color; });
+	
+var text = legend.append('text')
+	.attr("transform", function(d,i) {
+	        var horz = 185 + (i * 121);
+			var vert = yLen + 80;
+			return 'translate(' + horz + ',' + vert + ')';
+			})
+	.text(function(d) { return d.category + " (" + formatDollar(+d.min_wage) + " - " + formatDollar(+d.max_wage) + ")";})
+	.style("font", "9px sans-serif"); 
 //caption
-var caption = "Source:  State Demography Office, Print date: "+ formatDate(new Date);
+var caption = "Source:  State Demography Office, Print Date: "+ formatDate(new Date);
 graph.append("text")
-        .attr("x", (width - 250))             
-        .attr("y", height - (margin.bottom + 200) )
+        .attr("x", 165)             
+        .attr("y", yLen + 100)
         .attr("text-anchor", "right")  
         .style("font", "9px sans-serif")   
         .text(caption);
+
+
+
+//Table
+
+var hdrOut = jobsHdr(tabdata,YEAR);
+var table =  graph.append("foreignObject")
+	.attr("x", width * .66)
+	.attr("y", yLen * .66)
+    .attr("width", 150)
+    .attr("height", 150)
+    .append("xhtml:table");
+
+thead = table.append("thead");
+tbody = table.append("tbody");
+
+//Table Header
+thead.selectAll("tr")
+	 .data(hdrOut)
+	 .enter()
+	 .append("tr")
+	 .text(function(d) {return d;})
+	 .style("font", "9px sans-serif")
+	 .style("text-align","center");
+
+var rows = tbody.selectAll("tr") 
+   .data(tabdata)
+   .enter()
+   .append("tr")
+   .append("td")
+   .text(function(d) { return d.category + " (" + formatDollar(+d.min_wage) + " - " + formatDollar(+d.max_wage) + ") " + formatPercent(d.pct_jobs); })
+   .style("font", "9px sans-serif");
+
+
 
 return graph.node();
  
 }  //end of genChart
 
-//upChart  Selectes the svg, deletes is and replaces it with updated
-function upChart(outdata,CTY,YEAR) { 
-//Comma format
-var formatComma = d3.format(",d");
-//Date Format
-var formatDate = d3.timeFormat("%m/%d/%Y");
- //defining the SVG  
- margin = ({top: 20, right: 210, bottom: 40, left: 40})
-
-    var width = 900,
-	height = 600,
-    barHeight = 12,
-	axisShift = 130;
- 
- 
- 
- //Replacing existing svg// redefine the axes
- 
- var maxVal = d3.max(outdata, function(d) { return +d.total_jobs;} );
-var x_axis = d3.scaleLinear()
-                   .domain([0, maxVal])
-				   .range([0,(width - margin.right)]);
-
-var y_axis = d3.scaleBand()
-     .domain(outdata.map(d => d.job_title))
-	 .rangeRound([0,(barHeight * outdata.length)]);
- 
- var newGraph = d3.select("svg").remove();
- var newGraph = d3.select("#chart")
-	     .append("svg")
-         .attr("viewBox", [0, 0, width, height]);
- //Title
-var titStr = "Jobs by Sector: " + CTY +", "+ YEAR;
-newGraph.append("text")
-        .attr("x", (width / 2))             
-        .attr("y", margin.top + 10 )
-        .attr("text-anchor", "middle")  
-        .style("font", "16px sans-serif") 
-        .style("text-decoration", "underline")  
-        .text(titStr);
-		
- //New bars
-var bar = newGraph.selectAll("g")
-                  .data(outdata)
-                  .enter()
-                  .append("g")
-                  .attr("transform", `translate(${margin.left + axisShift},50)`);
-
-bar.append("rect")
-       .attr("y", function(d) { return y_axis(d.job_title); })
-       .attr("width", function(d) { return x_axis(+d.total_jobs); })
-       .attr("height", barHeight)
-	   .style("fill", function(d) { return d.bar_color});
-
-bar.append("text")
-       .attr("x", function(d) { return x_axis(+d.total_jobs); })
-       .attr("y", function(d,i) {return y_axis(d.job_title) + 5; })
-       .attr("dy", ".35em")
-       .text(function(d) { return formatComma(+d.total_jobs); })
-	   .style("fill","black")
-	   .style("font", "9px sans-serif");
-
-//X- axis
-newGraph.append("g")
-      .attr("class","X-Axis")
-      .attr("transform", `translate(${margin.left + axisShift},${(barHeight * outdata.length) + 52})`)
-      .call(d3.axisBottom(x_axis));
-
-//Y-axis
-newGraph.append("g")
-      .attr("transform", `translate(${margin.left + axisShift},50)`)
-      .call(d3.axisLeft(y_axis));
-
-//caption
-var caption = "Source:  State Demography Office, Print date: "+ formatDate(new Date);
-newGraph.append("text")
-       .attr("x", (width - 250))             
-        .attr("y", height - (margin.bottom + 200) )
-        .attr("text-anchor", "right")  
-        .style("font", "9px sans-serif")   
-        .text(caption);
-		
-return newGraph.node();
- } //end of upChart
  
  //MAIN PROGRAM
 
  //Populate dropdowns
  
 //Counties
-var counties = [{'county': '', 'fips': ''},{'county':'Adams County', 'fips': '1'},{'county':'Alamosa County', 'fips': '3'},{'county':'Arapahoe County', 'fips': '5'},
-				{'county':'Archuleta County', 'fips': '7'},{'county':'Baca County', 'fips': '9'},{'county':'Bent County', 'fips': '11'},{'county':'Boulder County', 'fips': '13'},
-				{'county':'Broomfield County', 'fips': '14'},{'county':'Chaffee County', 'fips': '15'},{'county':'Cheyenne County', 'fips': '17'},{'county':'Clear Creek County', 'fips': '19'},
-				{'county':'Conejos County', 'fips': '21'},{'county':'Costilla County', 'fips': '23'},{'county':'Crowley County', 'fips': '25'},{'county':'Custer County', 'fips': '27'},
-				{'county':'Delta County', 'fips': '29'},{'county':'Denver County', 'fips': '31'},{'county':'Dolores County', 'fips': '33'},{'county':'Douglas County', 'fips': '35'},
-				{'county':'Eagle County', 'fips': '37'},{'county':'Elbert County', 'fips': '39'},{'county':'El Paso County', 'fips': '41'},{'county':'Fremont County', 'fips': '43'},
-				{'county':'Garfield County', 'fips': '45'},{'county':'Gilpin County', 'fips': '47'},{'county':'Grand County', 'fips': '49'},{'county':'Gunnison County', 'fips': '51'},
-				{'county':'Hinsdale County', 'fips': '53'},{'county':'Huerfano County', 'fips': '55'},{'county':'Jackson County', 'fips': '57'},{'county':'Jefferson County', 'fips': '59'},
-				{'county':'Kiowa County', 'fips': '61'},{'county':'Kit Carson County', 'fips': '63'},{'county':'Lake County', 'fips': '65'},{'county':'La Plata County', 'fips': '67'},
-				{'county':'Larimer County', 'fips': '69'},{'county':'Las Animas County', 'fips': '71'},{'county':'Lincoln County', 'fips': '73'},{'county':'Logan County', 'fips': '75'},
-				{'county':'Mesa County', 'fips': '77'},{'county':'Mineral County', 'fips': '79'},{'county':'Moffat County', 'fips': '81'},{'county':'Montezuma County', 'fips': '83'},
-				{'county':'Montrose County', 'fips': '85'},{'county':'Morgan County', 'fips': '87'},{'county':'Otero County', 'fips': '89'},{'county':'Ouray County', 'fips': '91'},
-				{'county':'Park County', 'fips': '93'},{'county':'Phillips County', 'fips': '95'},{'county':'Pitkin County', 'fips': '97'},{'county':'Prowers County', 'fips': '99'},
-				{'county':'Pueblo County', 'fips': '101'},{'county':'Rio Blanco County', 'fips': '103'},{'county':'Rio Grande County', 'fips': '105'},{'county':'Routt County', 'fips': '107'},
-				{'county':'Saguache County', 'fips': '109'},{'county':'San Juan County', 'fips': '111'},{'county':'San Miguel County', 'fips': '113'},{'county':'Sedgwick County', 'fips': '115'},
-				{'county':'Summit County', 'fips': '117'},{'county':'Teller County', 'fips': '119'},{'county':'Washington County', 'fips': '121'},{'county':'Weld County', 'fips': '123'},
+var counties = [{'county': '', 'fips': ''},{'county':'Adams County', 'fips': '001'},
+                {'county':'Alamosa County', 'fips': '003'},{'county':'Arapahoe County', 'fips': '005'},
+				{'county':'Archuleta County', 'fips': '007'},{'county':'Baca County', 'fips': '009'},
+				{'county':'Bent County', 'fips': '011'},{'county':'Boulder County', 'fips': '013'},
+				{'county':'Broomfield County', 'fips': '014'},{'county':'Chaffee County', 'fips': '015'},
+				{'county':'Cheyenne County', 'fips': '017'},{'county':'Clear Creek County', 'fips': '019'},
+				{'county':'Conejos County', 'fips': '021'},{'county':'Costilla County', 'fips': '023'},
+				{'county':'Crowley County', 'fips': '025'},{'county':'Custer County', 'fips': '027'},
+				{'county':'Delta County', 'fips': '029'},{'county':'Denver County', 'fips': '031'},
+				{'county':'Dolores County', 'fips': '033'},{'county':'Douglas County', 'fips': '035'},
+				{'county':'Eagle County', 'fips': '037'},{'county':'Elbert County', 'fips': '039'},
+				{'county':'El Paso County', 'fips': '041'},{'county':'Fremont County', 'fips': '043'},
+				{'county':'Garfield County', 'fips': '045'},{'county':'Gilpin County', 'fips': '047'},
+				{'county':'Grand County', 'fips': '049'},{'county':'Gunnison County', 'fips': '051'},
+				{'county':'Hinsdale County', 'fips': '053'},{'county':'Huerfano County', 'fips': '055'},
+				{'county':'Jackson County', 'fips': '057'},{'county':'Jefferson County', 'fips': '059'},
+				{'county':'Kiowa County', 'fips': '061'},{'county':'Kit Carson County', 'fips': '063'},
+				{'county':'Lake County', 'fips': '065'},{'county':'La Plata County', 'fips': '067'},
+				{'county':'Larimer County', 'fips': '069'},{'county':'Las Animas County', 'fips': '071'},
+				{'county':'Lincoln County', 'fips': '073'},{'county':'Logan County', 'fips': '075'},
+				{'county':'Mesa County', 'fips': '077'},{'county':'Mineral County', 'fips': '079'},
+				{'county':'Moffat County', 'fips': '081'},{'county':'Montezuma County', 'fips': '083'},
+				{'county':'Montrose County', 'fips': '085'},{'county':'Morgan County', 'fips': '087'},
+				{'county':'Otero County', 'fips': '089'},{'county':'Ouray County', 'fips': '091'},
+				{'county':'Park County', 'fips': '093'},{'county':'Phillips County', 'fips': '095'},
+				{'county':'Pitkin County', 'fips': '097'},{'county':'Prowers County', 'fips': '099'},
+				{'county':'Pueblo County', 'fips': '101'},{'county':'Rio Blanco County', 'fips': '103'},
+				{'county':'Rio Grande County', 'fips': '105'},{'county':'Routt County', 'fips': '107'},
+				{'county':'Saguache County', 'fips': '109'},{'county':'San Juan County', 'fips': '111'},
+				{'county':'San Miguel County', 'fips': '113'},{'county':'Sedgwick County', 'fips': '115'},
+				{'county':'Summit County', 'fips': '117'},{'county':'Teller County', 'fips': '119'},
+				{'county':'Washington County', 'fips': '121'},{'county':'Weld County', 'fips': '123'},
 				{'county':'Yuma County', 'fips': '125'}];
 
  d3.select("#selCty")
@@ -467,7 +753,7 @@ var counties = [{'county': '', 'fips': ''},{'county':'Adams County', 'fips': '1'
     .text(d => d.county);
 
 //Main data read
-d3.csv("./data/jobs_by_sector.csv").then(function(indata){
+d3.csv("./data/jobs_by_sector_cat.csv").then(function(indata){
 
 //Building Years dropdown
 
@@ -498,6 +784,21 @@ d3.select("#selYear").on("change", function(d,i) {
 	});
 
 //Button click events...
+d3.select("#btnCount").on("click", function(event) {
+       countChart(indata);
+      });
+
+d3.select("#btnPercent").on("click", function(event) {
+       percentChart(indata);
+      });
+
+d3.select("#btn5Year").on("click", function(event) {
+       fiveyrChart(indata);
+      });
+
+d3.select("#btn10Year").on("click", function(event) {
+       tenyrChart(indata);
+      });
 
 d3.select("#btnData").on("click", function(event) {
           event.preventDefault();
