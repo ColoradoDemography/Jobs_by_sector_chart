@@ -137,8 +137,9 @@ return outdata;
 } //end of genData
 
 function dataDownload(datain){
-    var seldFIPS = eval(d3.select("#selCty").property('value'));
+    
 	var seldCTY = d3.select('#selCty option:checked').text();
+	var seldFIPS = switchFIPS(seldCTY);
 	var seldYEAR = eval(d3.select("#selYear").property('value'));
 	var fileName = "Jobs by Sector " + seldCTY + " " + seldYEAR + ".csv";
 
@@ -808,8 +809,9 @@ d3.select("#btnData").on("click", function(event) {
  
  d3.select("#btnSave").on("click", function(event) {
   event.preventDefault();
-  	var seldFIPS = eval(d3.select("#selCty").property('value'));
+  	
 	var seldCTY = d3.select('#selCty option:checked').text();
+	var seldFIPS = switchFIPS(seldCTY);
 	var seldYEAR = eval(d3.select("#selYear").property('value'));
 	var fileNamePNG = "Jobs by Sector "+seldCTY + " " + seldYEAR + ".png";
 	
