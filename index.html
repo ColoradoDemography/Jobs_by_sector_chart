@@ -134,7 +134,7 @@ d3.select("#selCty").on("change", function(d,i) {
          updateCountChart(indata);
 		 };
 	  if(chartType == 1) {
-	    updatePCTChart(indata);
+	    updatePCTChart(indata,0);
 		};
 	  if(chartType == 2) { //This is for the custom year chart...
 	    updateCustomChart(indata);
@@ -147,7 +147,7 @@ d3.select("#selYear").on("change", function(d,i) {
          updateCountChart(indata);
 		 };
 	  if(chartType == 1) {
-	    updatePCTChart(indata);
+	    updatePCTChart(indata,0);
 		};
 	});
 
@@ -169,7 +169,7 @@ d3.select("#btnCount").on("click", function(event) {
 d3.select("#btnPercent").on("click", function(event) {
        chartType = 1;
 	   hideDD()
-       updatePCTChart(indata);
+       updatePCTChart(indata,0);
       });
 
 d3.select("#btnComp").on("click", function(event) {
@@ -178,7 +178,7 @@ d3.select("#btnComp").on("click", function(event) {
  });
 d3.select("#btnData").on("click", function(event) {
           event.preventDefault();
-          dataDownload(indata);
+          dataDownload(indata, chartType);
  });
  
  d3.select("#btnSave").on("click", function(event) {
