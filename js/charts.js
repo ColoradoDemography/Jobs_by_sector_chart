@@ -49,18 +49,27 @@ function showDD(yrsVal) {
 
 //extendAxis extends the data array values to nearest whole 1000...
 function extendAxis(indata){
-
-	if((Math.abs(indata[0]) > 1000) || (Math.abs(indata[1]) > 1000)){
-			var MinVal = (Math.ceil(indata[0]/1000)*1000);
-			var MaxVal = Math.ceil(indata[1]/1000) * 1000;
-	  } else if((Math.abs(indata[0]) > 100) || (Math.abs(indata[1]) > 100)) {
-			var MinVal = (Math.ceil(indata[0]/100)*100);
-			var MaxVal = Math.ceil(indata[1]/100) * 100;
+	debugger;
+	if(Math.abs(indata[0]) > Math.abs(indata[1])) {
+		var MaxVal = Math.abs(indata[0]);
+	} else {
+		var MaxVal = Math.abs(indata[1]);
+	};
+	
+	if(Number(MaxVal) > 10000){
+			var adjMax = (Math.ceil(MaxVal/10000)*10000) + 10000;
+			var adjMin = ((Math.ceil(MaxVal/10000)*10000) - 10000) * -1;
+	} else if(Number(MaxVal) > 1000){
+			var adjMax = (Math.ceil(MaxVal/1000)*1000) + 1000;
+			var adjMin = ((Math.ceil(MaxVal/1000)*1000) - 1000) * -1;
+	  } else if(Number(MaxVal) > 100) {
+			var adjMax = (Math.ceil(MaxVal/100)*100) + 100;
+			var adjMin = ((Math.ceil(MaxVal/100)*100) - 100) * -1;
 	  } else {
-			var MinVal = (Math.ceil(indata[0]/10)*10);
-			var MaxVal = Math.ceil(indata[1]/10) * 10;
+			var adjMax = (Math.ceil(MaxVal/10)*10) + 100;
+			var adjMin = ((Math.ceil(MaxVal/10)*10) - 10) * -1;
 	   };
-	var outArray = [MinVal,MaxVal];
+	var outArray = [adjMin,adjMax];
 	return(outArray);
 }
 
@@ -806,9 +815,9 @@ var formatPercent = d3.format(".1%")
 var yLen = (barHeight + barSpace) * (outdata.length);
 
 var maxVal = d3.max(outdata, function(d) { return +d.total_jobs;} );
-var scaleVal = extendAxis([0,maxVal]);
+
 var x_axis = d3.scaleLinear()
-                   .domain([scaleVal[0], scaleVal[1]])
+                   .domain([0, maxVal])
 				   .range([0,(width - margin.right)]);
 
 var y_axis = d3.scaleBand()
