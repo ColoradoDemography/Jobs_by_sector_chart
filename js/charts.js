@@ -1248,13 +1248,16 @@ var tabdata = [ {"color" : "#FFFFFF","text" : tabtxt},
 			{"color" : '#D85F02',"text" : "Less than 80% of Average Weekly Wage"},
 			{"color" : '#757083', "text" : "Between 81% to 120% of Average Weekly Wage"},
 			{"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage"}];
-
-if(CTY == "Boulder County" && +YEAR2 < 2013) {
+debugger;
+var pos = x_axis(0);
+if(pos > 500) {
    var rectanchorX = width * .20;
+   var rectanchorY = yLen * .20;
 } else {
     var rectanchorX = width * .75;
+	var rectanchorY = yLen * .65;
 }; 
-   var rectanchorY = yLen * .65;
+   
 
 var table =  graph.append("g")
 	     .attr("class","tabobj");
