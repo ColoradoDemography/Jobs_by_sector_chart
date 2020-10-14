@@ -44,6 +44,9 @@ function showDD(yrsVal) {
 
 //DATA MANIPULATION FUNCTIONS
 
+
+
+
 //extendAxis extends the data array values to nearest whole 1000...
 function extendAxis(indata){
 
@@ -387,14 +390,15 @@ outdata.sort(function(a, b){ return d3.descending(+a['total_jobs'], +b['total_jo
 return outdata;
 }; //end of genData
 
-//genPctData calculates percentage from processed data...
-function genPctData(indata,jobsdata){
+//genPCTData calculates percentage from processed data...
+function genPCTData(indata,jobsdata){
+
 var jobsN = +jobsdata[0].sum_jobs;
 for(i = 0; i < indata.length; i++) {
    indata[i]["pct_jobs"] = indata[i].total_jobs/jobsN;
    };
 return indata;
-};  //end of genPctData
+};  //end of genPCTData
 
 //diffData calculates differences between two data sets
 function diffData(data1, data2) {
@@ -427,35 +431,114 @@ return(outData);
 
 
 //DATA AND IMAGE DOWNLOAD FUNCTIONS
-function dataDownload(datain){
+function dataDownload(datain, chartType){
 
+    var formatComma = d3.format(",d");
+	
 	var seldCTY = d3.select('#selCty option:checked').text();
 	var seldFIPS = switchFIPS(seldCTY);
+	
+if(chartType == 0){ //Count Data
 	var seldYEAR = eval(d3.select("#selYear").property('value'));
-	var fileName = "Jobs by Sector " + seldCTY + " " + seldYEAR + ".csv";
-
-	var datafiltered = datain.filter(function(d) {
+	 if(seldCTY == "Broomfield County" && seldYEAR < 2010){
+	seldYEAR = 2010;
+    };
+	var fileName = "Jobs by Sector Counts " + seldCTY + " " + seldYEAR + ".csv";
+	
+		var datafiltered = datain.filter(function(d) {
 		 if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
 	 })
 	var dataOut = genData(datafiltered);
 	
-	dataOut.forEach(function(e){
+		dataOut.forEach(function(e){
       if (typeof e === "object" ){
           e["county_name"] = seldCTY;
     }
    });
-   
-      const dataOut2 = dataOut.map(item => ({
+   var dataOut2 = dataOut.map(item => ({
 		fips_code : item.area_code,
 		county: item.county_name,
 		job_category : item.job_title,
 		year: item.population_year,
-		jobs: item.total_jobs}));
+		jobs: formatComma(Math.ceil(item.total_jobs))}));
+     };
 	 
+if(chartType == 1){ //Percentage Data
+    updatePCTChart(datain,1); //This 1 value will trigger the download...
+}; 
 
+if(chartType == 2) {
+		var begYEAR = eval(d3.select("#begYear").property('value'));
+        var endYEAR = eval(d3.select("#endYear").property('value'));
+		if(seldCTY == "Broomfield County" && begYEAR < 2010){
+	        begYEAR = 2010;
+        };
+        var fileName = "Jobs by Sector Differences " + seldCTY + " " + begYEAR + " to " + endYEAR + ".csv";
+
+	var dataYr1 = datain.filter(function(d) {
+                 if( d.population_year == begYEAR && d.area_code == seldFIPS) { return d; }
+             });
+    var dataYr2 = datain.filter(function(d) {
+                 if( d.population_year == endYEAR && d.area_code == seldFIPS) { return d; }
+             });
+	var outData1 = genData(dataYr1);
+	var outData2 = genData(dataYr2);  
+	var dataOut = diffData(outData1,outData2);
+	
+ 	dataOut.forEach(function(e){
+      if (typeof e === "object" ){
+          e["county_name"] = seldCTY;
+    }
+   });
+
+      var dataOut2 = dataOut.map(item => ({
+		fips_code : item.area_code,
+		county: item.county_name,
+		job_category : item.job_title,
+		year_1: item.population_year1,
+		jobs_year_1: formatComma(Math.ceil(item.total_jobs1)),
+		year_2: item.population_year2,
+		jobs_year_2: formatComma(Math.ceil(item.total_jobs2)),
+	    difference : Math.ceil(item.diffJobs)}));
+    }; 
+	
 	exportToCsv(fileName, dataOut2);
 
 }; //end of dataDownload
+
+
+function pctDownload(dataOut) {  //A special workaround for to download the PCT data  ugh
+
+     var formatPercent = d3.format(".1%")
+	 var formatComma = d3.format(",");
+
+	 var seldCTY = d3.select('#selCty option:checked').text();
+	 var seldFIPS = switchFIPS(seldCTY);
+	 var seldYEAR = eval(d3.select("#selYear").property('value'));
+	 if(seldCTY == "Broomfield County" && seldYEAR < 2010){
+	    seldYEAR = 2010;
+     };
+	var fileName = "Jobs by Sector Percentage " + seldCTY + " " + seldYEAR + ".csv";
+   
+   
+ 
+ 	dataOut.forEach(function(e){
+      if (typeof e === "object" ){
+          e["county_name"] = seldCTY;
+    }
+   });
+
+      var dataOut2 = dataOut.map(item => ({
+		fips_code : item.area_code,
+		county: item.county_name,
+		job_category : item.job_title,
+		year: item.population_year,
+		jobs: formatComma(Math.ceil(item.total_jobs)),
+		percentage : formatPercent(item.pct_jobs)}));
+     
+	exportToCsv(fileName, dataOut2);
+}; //pctDownload
+
 
 function exportToCsv(filename, rows) {
         var csvFile = d3.csvFormat(rows);
@@ -615,7 +698,8 @@ var graph = d3.select("svg").remove();
 }; //updateCountChart
 
 //updatePCTChart reads information from the dropdowns, updates the title block and generates the updated percentage chart
-function updatePCTChart(datain) {
+//type = 1 triggers the download function
+function updatePCTChart(datain,type) {
 
 var seldCTY = d3.select('#selCty option:checked').text();
 var seldFIPS = switchFIPS(seldCTY);
@@ -625,8 +709,9 @@ if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 	seldYEAR = 2010;
 };
 // Removes the chart
-
+if(type == 0) {
 var graph = d3.select("svg").remove();
+};
 	    //Generate bar chart
  var datafiltered = datain.filter(function(d) {
                  if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
@@ -638,8 +723,12 @@ var graph = d3.select("svg").remove();
   var  tabData = rngdata.filter(function(d) {
                      if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
                  });
-  pctData = genPctData(outData,tabData);
-  genPCTChart(pctData,tabData,seldCTY,seldYEAR);
+  pctData = genPCTData(outData,tabData);
+ if(type == 0){
+	 genPCTChart(pctData,tabData,seldCTY,seldYEAR);
+ } else {
+	pctDownload(pctData);
+ };
   				 });  //d3.csv
  
 }; //updatePCTChart
@@ -652,8 +741,8 @@ var seldFIPS = switchFIPS(seldCTY);
 var begYEAR = eval(d3.select("#begYear").property('value'));
 var endYEAR = eval(d3.select("#endYear").property('value'));
 
-if(seldCTY == "Broomfield County" && seldYEAR < 2010){
-	seldYEAR = 2010;
+if(seldCTY == "Broomfield County" && begYEAR < 2010){
+	begYEAR = 2010;
 };
 // Removes the chart
 
@@ -1048,7 +1137,7 @@ if(YEAR1 == YEAR2) {
 			.style("text-decoration", "underline")  
 			.text(titStr);
 } else if(+YEAR1 > +YEAR2) {
-	var titStr = "The 'Start Year' is greater than the 'End Year' value.  Please adjust the 'Start Year' or 'End Year' values.";
+	var titStr = "The 'Start Year' value is greater than the 'End Year' value.  Please adjust the 'Start Year' or 'End Year' values.";
 	graph.append("text")
 			.attr("x", (width / 2))             
 			.attr("y", margin.top + 10 )
