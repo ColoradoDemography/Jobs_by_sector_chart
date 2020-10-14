@@ -442,6 +442,7 @@ if(chartType == 0){ //Count Data
 	var seldYEAR = eval(d3.select("#selYear").property('value'));
 	 if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 	seldYEAR = 2010;
+	document.getElementById("selYear").value = 2010;
     };
 	var fileName = "Jobs by Sector Counts " + seldCTY + " " + seldYEAR + ".csv";
 	
@@ -472,6 +473,7 @@ if(chartType == 2) {
         var endYEAR = eval(d3.select("#endYear").property('value'));
 		if(seldCTY == "Broomfield County" && begYEAR < 2010){
 	        begYEAR = 2010;
+			document.getElementById("begYear").value = 2010;
         };
         var fileName = "Jobs by Sector Differences " + seldCTY + " " + begYEAR + " to " + endYEAR + ".csv";
 
@@ -517,6 +519,7 @@ function pctDownload(dataOut) {  //A special workaround for to download the PCT 
 	 var seldYEAR = eval(d3.select("#selYear").property('value'));
 	 if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 	    seldYEAR = 2010;
+		document.getElementById("selYear").value = 2010;
      };
 	var fileName = "Jobs by Sector Percentage " + seldCTY + " " + seldYEAR + ".csv";
    
@@ -649,6 +652,7 @@ var seldYEAR = eval(d3.select("#selYear").property('value'))
 
 if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 	seldYEAR = 2010;
+	document.getElementById("selYear").value = 2010;
 };
 	    //Generate bar chart
   var datafiltered = datain.filter(function(d) {
@@ -676,6 +680,7 @@ var seldYEAR = eval(d3.select("#selYear").property('value'));
 
 if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 	seldYEAR = 2010;
+	document.getElementById("selYear").value = 2010;
 };
 // Removes the chart
 
@@ -707,6 +712,7 @@ var seldYEAR = eval(d3.select("#selYear").property('value'));
 
 if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 	seldYEAR = 2010;
+	document.getElementById("selYear").value = 2010;
 };
 // Removes the chart
 if(type == 0) {
@@ -743,6 +749,7 @@ var endYEAR = eval(d3.select("#endYear").property('value'));
 
 if(seldCTY == "Broomfield County" && begYEAR < 2010){
 	begYEAR = 2010;
+	document.getElementById("begYear").value = 2010;
 };
 // Removes the chart
 
@@ -1242,7 +1249,7 @@ var tabdata = [ {"color" : "#FFFFFF","text" : tabtxt},
 			{"color" : '#757083', "text" : "Between 81% to 120% of Average Weekly Wage"},
 			{"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage"}];
 
-if(CTY == "Boulder County") {
+if(CTY == "Boulder County" && endYEAR < 2016) {
    var rectanchorX = width * .20;
 } else {
     var rectanchorX = width * .75;
