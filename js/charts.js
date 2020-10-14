@@ -49,7 +49,7 @@ function showDD(yrsVal) {
 
 //extendAxis extends the data array values to nearest whole 1000...
 function extendAxis(indata){
-	debugger;
+	
 	if(Math.abs(indata[0]) > Math.abs(indata[1])) {
 		var MaxVal = Math.abs(indata[0]);
 	} else {
