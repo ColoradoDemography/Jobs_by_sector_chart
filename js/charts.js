@@ -1266,7 +1266,7 @@ var tabdata = [ {"color" : "#FFFFFF","text" : tabtxt},
 			{"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage"}];
 
 var pos = x_axis(0);
-if(pos > 500) {
+if(pos > 400) {
    var rectanchorX = width * .20;
    var rectanchorY = yLen * .20;
 } else {
