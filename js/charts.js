@@ -49,33 +49,41 @@ function showDD(yrsVal) {
 
 //extendAxis extends the data array values to nearest whole 1000...
 function extendAxis(indata){
-	
-	if(Math.abs(indata[0]) > Math.abs(indata[1])) {
-		var MaxVal = Math.abs(indata[0]);
-	} else {
-		var MaxVal = Math.abs(indata[1]);
-	};
-	
-	if(Number(MaxVal) > 10000){
-			var adjMax = (Math.ceil(MaxVal/10000)*10000) + 5000;
-	} else if(Number(MaxVal) > 1000){
-			var adjMax = (Math.ceil(MaxVal/1000)*1000) + 500;
-	  } else if(Number(MaxVal) > 100) {
-			var adjMax = (Math.ceil(MaxVal/100)*100) + 50;
+		var MinVal = Number(indata[0]);
+		var MaxVal = Number(indata[1]);
+
+	// Adjusting MinVal
+	if(Math.abs(MinVal) > 10000){
+			var adjMin = (Math.floor(MinVal/10000)*10000) ;
+	} else if(Math.abs(MinVal) > 1000){
+			var adjMin = (Math.floor(MinVal/1000)*1000);
+	  } else if(Math.abs(MinVal) > 100) {
+			var adjMin = (Math.floor(MinVal/100)*100);
 	  } else {
-			var adjMax = (Math.ceil(MaxVal/10)*10) + 5;
+			var adjMin = (Math.floor(MinVal/10)*10);
 	   };
-	var outArray = [-adjMax,adjMax];
+	   
+	// Adjusting MaxVal
+	if(Number(MaxVal) > 10000){
+			var adjMax = (Math.ceil(MaxVal/10000)*10000);
+	} else if(Number(MaxVal) > 1000){
+			var adjMax = (Math.ceil(MaxVal/1000)*1000);
+	  } else if(Number(MaxVal) > 100) {
+			var adjMax = (Math.ceil(MaxVal/100)*100);
+	  } else {
+			var adjMax = (Math.ceil(MaxVal/10)*10);
+	   };
+	var outArray = [adjMin,adjMax];
 	return(outArray);
 }
 
 function rndJobs(inVal) {
 	   if(Math.abs(inVal) > 1000) {
-		  var outVal = Math.ceil(inVal/1000)*1000;
+		  var outVal = Math.round(inVal/1000)*1000;
        } else if(Math.abs(inVal) > 100) {
-		  var outVal = Math.ceil(inVal/100)*100;
+		  var outVal = Math.round(inVal/100)*100;
 	   } else {
-		  var outVal = Math.ceil(inVal/10)*10;
+		  var outVal = Math.round(inVal/10)*10;
 	   };
 return outVal;
 }
@@ -84,7 +92,7 @@ return outVal;
 function jobsHdr(indata,yr){
 
 //Comma format
-var formatComma = d3.format(",.2f");
+var formatComma = d3.format(",");
 //Dollar Format
 var formatDecimalComma = d3.format(",.0f");
 var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
@@ -438,7 +446,7 @@ return(outData);
 //DATA AND IMAGE DOWNLOAD FUNCTIONS
 function dataDownload(datain, chartType){
 
-    var formatComma = d3.format(",d");
+    var formatComma = d3.format(",");
 	
 	var seldCTY = d3.select('#selCty option:checked').text();
 	var seldFIPS = switchFIPS(seldCTY);
@@ -466,7 +474,7 @@ if(chartType == 0){ //Count Data
 		county: item.county_name,
 		job_category : item.job_title,
 		year: item.population_year,
-		jobs: formatComma(Math.ceil(item.total_jobs))}));
+		jobs: formatComma(Math.round(item.total_jobs))}));
      };
 	 
 if(chartType == 1){ //Percentage Data
@@ -503,10 +511,10 @@ if(chartType == 2) {
 		county: item.county_name,
 		job_category : item.job_title,
 		year_1: item.population_year1,
-		jobs_year_1: formatComma(Math.ceil(item.total_jobs1)),
+		jobs_year_1: formatComma(Math.round(item.total_jobs1)),
 		year_2: item.population_year2,
-		jobs_year_2: formatComma(Math.ceil(item.total_jobs2)),
-	    difference : Math.ceil(item.diffJobs)}));
+		jobs_year_2: formatComma(Math.round(item.total_jobs2)),
+	    difference : Math.round(item.diffJobs)}));
     }; 
 	
 	exportToCsv(fileName, dataOut2);
@@ -541,7 +549,7 @@ function pctDownload(dataOut) {  //A special workaround for to download the PCT 
 		county: item.county_name,
 		job_category : item.job_title,
 		year: item.population_year,
-		jobs: formatComma(Math.ceil(item.total_jobs)),
+		jobs: formatComma(Math.round(item.total_jobs)),
 		percentage : formatPercent(item.pct_jobs)}));
      
 	exportToCsv(fileName, dataOut2);
@@ -790,7 +798,7 @@ genCustomChart(dataDiff,totalChng,seldCTY,begYEAR,endYEAR);
 function genCountChart(outdata,tabdata,CTY,YEAR){ 
 
 //Comma format
-var formatComma = d3.format(",d");
+var formatComma = d3.format(",");
 //Dollar Format
 var formatDecimalComma = d3.format(",.0f");
 var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
@@ -850,10 +858,10 @@ bar.append("rect")
 	   .style("fill", function(d) { return d.bar_color});
 
 bar.append("text")
-       .attr("x", function(d) { return x_axis(+d.total_jobs); })
+       .attr("x", function(d) { return x_axis(+d.total_jobs) + 3; })
        .attr("y", function(d,i) {return y_axis(d.job_title) + 5; })
        .attr("dy", ".35em")
-       .text(function(d) { return formatComma(+d.total_jobs); })
+       .text(function(d) { return formatComma(Math.round(d.total_jobs)); })
 	   .style("fill","black")
 	   .style("font", "9px sans-serif");
 
@@ -924,7 +932,7 @@ thead.selectAll("tr")
 	 .append("tr")
 	 .text(function(d) {return d;})
 	 .style("font", "9px sans-serif")
-	 .style("text-align","center");
+	 .style("text-align","left");
 
 var rows = tbody.selectAll("tr") 
    .data(tabdata)
@@ -944,7 +952,7 @@ return graph.node();
 function genPCTChart(outdata,tabdata,CTY,YEAR){ 
 
 //Comma format
-var formatComma = d3.format(",d");
+var formatComma = d3.format(",");
 //Dollar Format
 var formatDecimalComma = d3.format(",.0f");
 var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
@@ -1098,7 +1106,7 @@ function genCustomChart(outdata,totalDiff,CTY,YEAR1,YEAR2){
 
 
 //Comma format
-var formatComma = d3.format(",d");
+var formatComma = d3.format(",");
 //Dollar Format
 var formatDecimalComma = d3.format(",.0f");
 var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
@@ -1206,10 +1214,10 @@ graph.append("text")
 	   .data(outdata)
 	   .enter()
 	   .append("text")
-       .attr("x", function(d) { return d.diffJobs < 0 ? x_axis(+d.diffJobs) - 35 : x_axis(+d.diffJobs) + 10; })
+       .attr("x", function(d) { return d.diffJobs < 0 ? x_axis(+d.diffJobs) - 40 : x_axis(+d.diffJobs) + 10; })
        .attr("y", function(d,i) {return y_axis(d.job_title) + 5; })
        .attr("dy", ".35em")
-       .text(function(d) { return formatComma(+d.diffJobs); })
+       .text(function(d) { return formatComma(Math.round(d.diffJobs)); })
 	   .style("fill","black")
 	   .style("font", "9px sans-serif");
 	  
@@ -1253,7 +1261,7 @@ var tabdata = [ {"color" : "#FFFFFF","text" : tabtxt},
 			{"color" : '#D85F02',"text" : "Less than 80% of Average Weekly Wage"},
 			{"color" : '#757083', "text" : "Between 81% to 120% of Average Weekly Wage"},
 			{"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage"}];
-debugger;
+
 var pos = x_axis(0);
 if(pos > 500) {
    var rectanchorX = width * .20;
