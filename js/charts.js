@@ -833,6 +833,7 @@ var y_axis = d3.scaleBand()
 
   var graph = d3.select("#chart")
 	     .append("svg")
+		 .attr("preserveAspectRatio", "xMinYMin meet")
          .attr("viewBox", [0, 0, width, height]);
 
 //Title
@@ -988,6 +989,7 @@ var y_axis = d3.scaleBand()
 
   var graph = d3.select("#chart")
 	     .append("svg")
+		 .attr("preserveAspectRatio", "xMinYMin meet")
          .attr("viewBox", [0, 0, width, height]);
 
 //Title
@@ -1146,6 +1148,7 @@ var y_axis = d3.scaleBand()
 
 var graph = d3.select("#chart")
 	     .append("svg")
+		 .attr("preserveAspectRatio", "xMinYMin meet")
          .attr("viewBox", [0, 0, width, height]);
 if(YEAR1 == YEAR2) {
 	var titStr = "The selected year values are equal.  Please adjust the 'Start Year' or 'End Year' values.";
@@ -1270,7 +1273,13 @@ if(pos > 500) {
     var rectanchorX = width * .75;
 	var rectanchorY = yLen * .65;
 }; 
-   
+
+
+var infoAnchor = [];
+infoAnchor[0] = rectanchorY + ((barSpace + barHeight + 1) * 1);
+infoAnchor[1] = rectanchorY + ((barSpace + barHeight + 1) * 2);
+infoAnchor[2] = rectanchorY + ((barSpace + barHeight + 1) * 3);
+infoAnchor[3] = rectanchorY + ((barSpace + barHeight + 1) * 4);
 
 var table =  graph.append("g")
 	     .attr("class","tabobj");
@@ -1280,7 +1289,7 @@ table.selectAll("rect")
 	.enter()
 	.append("rect")
     .attr("x", function(d) {return rectanchorX;})
-	.attr("y", function(d,i) {return rectanchorY + (i * (barSpace + barHeight + 1));})
+	.attr("y", function(d,i) {return infoAnchor[i];})
     .attr("width",  barHeight)
     .attr("height", barHeight)
     .attr("fill", function(d) { return d.color;});
@@ -1290,7 +1299,7 @@ table.selectAll("text")
 	.enter()
 	.append("text")
     .attr("x", function(d) {return rectanchorX + 10;})
-	.attr("y", function(d,i) {return rectanchorY + (i * (barSpace + barHeight + 4));})
+	.attr("y", function(d,i) {return infoAnchor[i] + 6;})
     .text( function(d) { return d.text;})
 	.style("font", "9px sans-serif");
 	
