@@ -88,26 +88,63 @@ function rndJobs(inVal) {
 return outVal;
 }
 
-//jobsHdr creates header for jobs tables
-function jobsHdr(indata,yr){
+//jobsHdr appends the jobs table objects into the svg 
+function jobsHdr(tdata,yr,posLen,bSpace,bHeight,jobsD,xPos, type){
 
 //Comma format
 var formatComma = d3.format(",");
+var formatDecimal = d3.format(".2");
 //Dollar Format
 var formatDecimalComma = d3.format(",.0f");
 var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
-var jobsN = +indata[0].sum_jobs;
-var wageN = +indata[0].total_wage;
+//Percentage Format
+var formatPercent = d3.format(".1%")
 
+//Y y anchor position
+if(xPos > 400) {
+   var rectanchorY = posLen * .20;
+} else {
+	var rectanchorY = posLen * .65;
+}; 
+
+if(type == 0){ //For the Count and Difference Tables
+		var jobsN = +tdata[0].sum_jobs;
+		var wageN = +tdata[0].total_wage;
+		var jobsRnd = rndJobs(jobsN);
+		//Scale jobsRnd
+		if(jobsRnd > 1000000){
+		   var jobVal = formatDecimal(jobsRnd/1000000);
+		   var jobStr = jobVal + " Million Total Estimated Jobs";
+		} else if(jobsRnd > 1000) {
+		   var jobVal = formatDecimal(jobsRnd/1000);
+		   var jobStr = jobVal + " Thousand Total Estimated Jobs";
+        } else {
+		   var jobStr = formatComma(jobRnd) + " Total Estimated Jobs";
+        };
+		var wageVal = formatDollar(wageN);
+        var wageStr = wageVal + " Average Annual Wage";
+        var yrStr = yr + " Employment Share by Wage";
+		
+		var lowStr = "(" + formatDollar(tdata[0].min_wage) + " - " + formatDollar(tdata[0].max_wage) + ") " + formatPercent(tdata[0].pct_jobs);
+		var midStr = "(" + formatDollar(tdata[1].min_wage) + " - " + formatDollar(tdata[1].max_wage) + ") " + formatPercent(tdata[1].pct_jobs);
+		var highStr = "(" + formatDollar(tdata[2].min_wage) + " - " + formatDollar(tdata[2].max_wage) + ") " + formatPercent(tdata[2].pct_jobs);
+		//Output structure
+		outArr = [{"color" : "#FFFFFF","text" : jobStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 1)},
+		          {"color" : "#FFFFFF","text" : wageStr, "ypos" : rectanchorY + ((bSpace + bHeight + 2) * 2)},
+				  {"color" : "#FFFFFF","text" : yrStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 3)},
+				  {"color" : "#D85F02", "text" : lowStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 4)},
+			      {"color" : "#757083", "text" : midStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 5)},
+			      {"color" : "#1B9E77", "text" : highStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 6)}];
+     } else {
 //round jobs value and output string
-   var jobVal = formatComma(rndJobs(jobsN))
-   var jobStr = jobVal + " Million Total Estimated Jobs";
- 
-var wageVal = formatDollar(wageN);
-var wageStr = wageVal + " Average Annual Wage";
-var yrStr = yr + " Employment Share by Wage";
+var tabtxt = formatComma(rndJobs(jobsD)) + " Total Employment Change";
+var outArr = [ {"color" : "#FFFFFF","text" : tabtxt, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 1)},
+			{"color" : '#D85F02',"text" : "Less than 80% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 2)},
+			{"color" : '#757083', "text" : "Between 81% to 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 3)},
+			{"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 4)}];
+}
 
-var outArr = [jobStr, wageStr, yrStr];
+ 
 
 return outArr;
 };
@@ -879,31 +916,6 @@ graph.append("g")
       .call(d3.axisLeft(y_axis));
 	  
 
-//Legend
-var legend = graph.selectAll(".legend")
-	.data(tabdata)
-	.enter()
-	.append("g")
-	.attr("class","legend");
-	
-var rects = legend.append('rect')
-	.attr("width",10)
-	.attr("height",10)
-	.attr("transform", function(d,i) {
-	        var horz = 170 + (i * 120);
-			var vert = yLen + 70;
-			return 'translate(' + horz + ',' + vert + ')';
-			})
-	.attr("fill", function(d) { return d.leg_color; });
-	
-var text = legend.append('text')
-	.attr("transform", function(d,i) {
-	        var horz = 185 + (i * 121);
-			var vert = yLen + 80;
-			return 'translate(' + horz + ',' + vert + ')';
-			})
-	.text(function(d) { return d.category + " (" + formatDollar(+d.min_wage) + " - " + formatDollar(+d.max_wage) + ")";})
-	.style("font", "9px sans-serif"); 
 //caption
 var caption = "Source:  State Demography Office, Print Date: "+ formatDate(new Date);
 graph.append("text")
@@ -915,36 +927,37 @@ graph.append("text")
 
 //Table
 
-var hdrOut = jobsHdr(tabdata,YEAR);
-var table =  graph.append("foreignObject")
-	.attr("x", width * .66)
-	.attr("y", yLen * .66)
-    .attr("width", 200)
-    .attr("height", 150)
-    .append("xhtml:table");
+var pos = x_axis(0);
+var tabArray = jobsHdr(tabdata,YEAR,yLen,barSpace,barHeight,0,pos, 0);
 
-thead = table.append("thead");
-tbody = table.append("tbody");
+if(pos > 400) {
+   var rectanchorX = width * .20;
+} else {
+    var rectanchorX = width * .75;
+}; 
 
-//Table Header
-thead.selectAll("tr")
-	 .data(hdrOut)
-	 .enter()
-	 .append("tr")
-	 .text(function(d) {return d;})
-	 .style("font", "9px sans-serif")
-	 .style("text-align","left");
+var table =  graph.append("g")
+	     .attr("class","tabobj");
+		 
+table.selectAll("rect")
+    .data(tabArray)
+	.enter()
+	.append("rect")
+    .attr("x", function(d) {return rectanchorX;})
+	.attr("y", function(d) {return d.ypos;})
+    .attr("width",  barHeight)
+    .attr("height", barHeight)
+    .attr("fill", function(d) { return d.color;});
 
-var rows = tbody.selectAll("tr") 
-   .data(tabdata)
-   .enter()
-   .append("tr")
-   .append("td")
-   .text(function(d) { return d.category + " (" + formatDollar(+d.min_wage) + " - " + formatDollar(+d.max_wage) + ") " + formatPercent(d.pct_jobs); })
-   .style("font", "9px sans-serif");
-
-
-
+table.selectAll("text")
+    .data(tabArray)
+	.enter()
+	.append("text")
+    .attr("x", function(d) {return rectanchorX + 10;})
+	.attr("y", function(d) {return d.ypos + 6;})
+    .text( function(d) { return d.text;})
+	.style("font", "9px sans-serif");
+	
 return graph.node();
  
 };  //end of genCountChart
@@ -1035,31 +1048,6 @@ graph.append("g")
       .call(d3.axisLeft(y_axis));
 	  
 
-//Legend
-var legend = graph.selectAll(".legend")
-	.data(tabdata)
-	.enter()
-	.append("g")
-	.attr("class","legend");
-	
-var rects = legend.append('rect')
-	.attr("width",10)
-	.attr("height",10)
-	.attr("transform", function(d,i) {
-	        var horz = 170 + (i * 120);
-			var vert = yLen + 70;
-			return 'translate(' + horz + ',' + vert + ')';
-			})
-	.attr("fill", function(d) { return d.leg_color; });
-	
-var text = legend.append('text')
-	.attr("transform", function(d,i) {
-	        var horz = 185 + (i * 121);
-			var vert = yLen + 80;
-			return 'translate(' + horz + ',' + vert + ')';
-			})
-	.text(function(d) { return d.category + " (" + formatDollar(+d.min_wage) + " - " + formatDollar(+d.max_wage) + ")";})
-	.style("font", "9px sans-serif"); 
 //caption
 var caption = "Source:  State Demography Office, Print Date: "+ formatDate(new Date);
 graph.append("text")
@@ -1070,35 +1058,37 @@ graph.append("text")
         .text(caption);
 
 //Table
+var pos = x_axis(0);
+var tabArray = jobsHdr(tabdata,YEAR,yLen,barSpace,barHeight,0,pos, 0);
 
-var hdrOut = jobsHdr(tabdata,YEAR);
-var table =  graph.append("foreignObject")
-	.attr("x", width * .66)
-	.attr("y", yLen * .66)
-    .attr("width", 200)
-    .attr("height", 150)
-    .append("xhtml:table");
+if(pos > 400) {
+   var rectanchorX = width * .20;
+} else {
+    var rectanchorX = width * .75;
+}; 
 
-thead = table.append("thead");
-tbody = table.append("tbody");
+var table =  graph.append("g")
+	     .attr("class","tabobj");
+		 
+table.selectAll("rect")
+    .data(tabArray)
+	.enter()
+	.append("rect")
+    .attr("x", function(d) {return rectanchorX;})
+	.attr("y", function(d) {return d.ypos;})
+    .attr("width",  barHeight)
+    .attr("height", barHeight)
+    .attr("fill", function(d) { return d.color;});
 
-//Table Header
-thead.selectAll("tr")
-	 .data(hdrOut)
-	 .enter()
-	 .append("tr")
-	 .text(function(d) {return d;})
-	 .style("font", "9px sans-serif")
-	 .style("text-align","center");
-
-var rows = tbody.selectAll("tr") 
-   .data(tabdata)
-   .enter()
-   .append("tr")
-   .append("td")
-   .text(function(d) { return d.category + " (" + formatDollar(+d.min_wage) + " - " + formatDollar(+d.max_wage) + ") " + formatPercent(d.pct_jobs); })
-   .style("font", "9px sans-serif");
-
+table.selectAll("text")
+    .data(tabArray)
+	.enter()
+	.append("text")
+    .attr("x", function(d) {return rectanchorX + 10;})
+	.attr("y", function(d) {return d.ypos + 6;})
+    .text( function(d) { return d.text;})
+	.style("font", "9px sans-serif");
+	
 return graph.node();
  
 };  //end of genPCTChart
@@ -1266,40 +1256,34 @@ var tabdata = [ {"color" : "#FFFFFF","text" : tabtxt},
 			{"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage"}];
 
 var pos = x_axis(0);
+var tabArray = jobsHdr(tabdata,0,yLen,barSpace,barHeight,totalDiff,pos, 1);
+
 if(pos > 400) {
    var rectanchorX = width * .20;
-   var rectanchorY = yLen * .20;
 } else {
     var rectanchorX = width * .75;
-	var rectanchorY = yLen * .65;
 }; 
 
-
-var infoAnchor = [];
-infoAnchor[0] = rectanchorY + ((barSpace + barHeight + 1) * 1);
-infoAnchor[1] = rectanchorY + ((barSpace + barHeight + 1) * 2);
-infoAnchor[2] = rectanchorY + ((barSpace + barHeight + 1) * 3);
-infoAnchor[3] = rectanchorY + ((barSpace + barHeight + 1) * 4);
 
 var table =  graph.append("g")
 	     .attr("class","tabobj");
 		 
 table.selectAll("rect")
-    .data(tabdata)
+    .data(tabArray)
 	.enter()
 	.append("rect")
     .attr("x", function(d) {return rectanchorX;})
-	.attr("y", function(d,i) {return infoAnchor[i];})
+	.attr("y", function(d) {return d.ypos;})
     .attr("width",  barHeight)
     .attr("height", barHeight)
     .attr("fill", function(d) { return d.color;});
 
 table.selectAll("text")
-    .data(tabdata)
+    .data(tabArray)
 	.enter()
 	.append("text")
     .attr("x", function(d) {return rectanchorX + 10;})
-	.attr("y", function(d,i) {return infoAnchor[i] + 6;})
+	.attr("y", function(d) {return d.ypos + 6;})
     .text( function(d) { return d.text;})
 	.style("font", "9px sans-serif");
 	
