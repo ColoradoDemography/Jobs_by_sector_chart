@@ -57,19 +57,15 @@ function extendAxis(indata){
 	};
 	
 	if(Number(MaxVal) > 10000){
-			var adjMax = (Math.ceil(MaxVal/10000)*10000) + 10000;
-			var adjMin = ((Math.ceil(MaxVal/10000)*10000) - 10000) * -1;
+			var adjMax = (Math.ceil(MaxVal/10000)*10000) + 5000;
 	} else if(Number(MaxVal) > 1000){
-			var adjMax = (Math.ceil(MaxVal/1000)*1000) + 1000;
-			var adjMin = ((Math.ceil(MaxVal/1000)*1000) - 1000) * -1;
+			var adjMax = (Math.ceil(MaxVal/1000)*1000) + 500;
 	  } else if(Number(MaxVal) > 100) {
-			var adjMax = (Math.ceil(MaxVal/100)*100) + 100;
-			var adjMin = ((Math.ceil(MaxVal/100)*100) - 100) * -1;
+			var adjMax = (Math.ceil(MaxVal/100)*100) + 50;
 	  } else {
-			var adjMax = (Math.ceil(MaxVal/10)*10) + 100;
-			var adjMin = ((Math.ceil(MaxVal/10)*10) - 10) * -1;
+			var adjMax = (Math.ceil(MaxVal/10)*10) + 5;
 	   };
-	var outArray = [adjMin,adjMax];
+	var outArray = [-adjMax,adjMax];
 	return(outArray);
 }
 
