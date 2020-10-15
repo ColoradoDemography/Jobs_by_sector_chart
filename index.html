@@ -151,6 +151,15 @@ d3.select("#selYear").on("change", function(d,i) {
 		};
 	});
 
+
+//Change of beginning year -- triggers comparison chart...
+d3.select("#begYear").on("change", function(d,i) {
+   if(chartType == 2) {
+       updateCustomChart(indata);
+	};
+ });
+ 
+ 
 //Change of end year -- triggers comparison chart...
 d3.select("#endYear").on("change", function(d,i) {
    if(chartType == 2) {
@@ -186,8 +195,19 @@ d3.select("#btnData").on("click", function(event) {
   	
 	var seldCTY = d3.select('#selCty option:checked').text();
 	var seldFIPS = switchFIPS(seldCTY);
-	var seldYEAR = eval(d3.select("#selYear").property('value'));
-	var fileNamePNG = "Jobs by Sector "+seldCTY + " " + seldYEAR + ".png";
+	
+	if(chartType == 0) {
+	     var seldYEAR = eval(d3.select("#selYear").property('value'));
+	     var fileNamePNG = "Jobs by Sector Counts "+seldCTY + " " + seldYEAR + ".png";
+		 } else if(chartType == 1) {
+		 var seldYEAR = eval(d3.select("#selYear").property('value'));
+	     var fileNamePNG = "Jobs by Sector Percentages "+seldCTY + " " + seldYEAR + ".png";
+		 } else {
+		 var begYEAR = eval(d3.select("#begYear").property('value'));
+		 var endYEAR = eval(d3.select("#endYear").property('value'));
+	     var fileNamePNG = "Jobs by Sector Differences "+seldCTY + " " + begYEAR + " to " + endYEAR + ".png";
+         };
+
 	
 	imageDownload(fileNamePNG);
  });
