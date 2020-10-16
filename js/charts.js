@@ -77,16 +77,6 @@ function extendAxis(indata){
 	return(outArray);
 }
 
-function rndJobs(inVal) {
-	   if(Math.abs(inVal) > 1000) {
-		  var outVal = Math.round(inVal/1000)*1000;
-       } else if(Math.abs(inVal) > 100) {
-		  var outVal = Math.round(inVal/100)*100;
-	   } else {
-		  var outVal = Math.round(inVal/10)*10;
-	   };
-return outVal;
-}
 
 //jobsHdr appends the jobs table objects into the svg 
 function jobsHdr(tdata,yr,posLen,bSpace,bHeight,jobsD,xPos, type){
@@ -110,7 +100,7 @@ if(xPos > 400) {
 if(type == 0){ //For the Count and Difference Tables
 		var jobsN = +tdata[0].sum_jobs;
 		var wageN = +tdata[0].total_wage;
-		var jobsRnd = rndJobs(jobsN);
+		var jobsRnd = Math.round(jobsN);
 		//Scale jobsRnd
 		if(jobsRnd > 1000000){
 		   var jobVal = formatDecimal(jobsRnd/1000000);
@@ -119,7 +109,7 @@ if(type == 0){ //For the Count and Difference Tables
 		   var jobVal = formatDecimal(jobsRnd/1000);
 		   var jobStr = jobVal + " Thousand Total Estimated Jobs";
         } else {
-		   var jobStr = formatComma(jobRnd) + " Total Estimated Jobs";
+		   var jobStr = formatComma(jobsRnd) + " Total Estimated Jobs";
         };
 		var wageVal = formatDollar(wageN);
         var wageStr = wageVal + " Average Annual Wage";
@@ -137,7 +127,7 @@ if(type == 0){ //For the Count and Difference Tables
 			      {"color" : "#1B9E77", "text" : highStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 6)}];
      } else {
 //round jobs value and output string
-var tabtxt = formatComma(rndJobs(jobsD)) + " Total Employment Change";
+var tabtxt = formatComma(Math.round(jobsD)) + " Total Employment Change";
 var outArr = [ {"color" : "#FFFFFF","text" : tabtxt, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 1)},
 			{"color" : '#D85F02',"text" : "Less than 80% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 2)},
 			{"color" : '#757083', "text" : "Between 81% to 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 3)},
@@ -404,13 +394,15 @@ var barColors = [ {'category' : 'Low', 'bar_color' : '#D85F02'},
 				  {'category' : 'High', 'bar_color' : '#1B9E77'}
 				  ];
 				  
+	
+				  
 //joining label array to data set
 var outdata = join(barLabels,indata,"sector_id","sector_id",function(dat,col){
             return{
 			   area_code : dat.area_code,
 			   sector_id: dat.sector_id,
 			   county: dat.county,
-			   job_title: (col !== undefined) ? col.job_title : null,
+			   job_title: (col !== undefined) ? col.job_title : dat.job_title,
 			   population_year: dat.population_year,
 			   total_jobs: dat.total_jobs,
 			   category : dat.category
@@ -450,32 +442,112 @@ for(i = 0; i < indata.length; i++) {
 return indata;
 };  //end of genPCTData
 
+//unmatchedArray adds missing records prior to calculting the differences
+var unmatchedArray = function(obj1,obj2) {
+  var fips = obj2[0].area_code;
+    var yr = obj2[0].population_year;
+  var unmatched = [];
+  for(i = 0; i < obj1.length; i++){
+	    var match = false;
+	    for(j = 0; j < obj2.length; j++){
+			if(obj1[i].sector_id == obj2[j].sector_id){
+				 match = true;
+			}
+		};  //j loop
+		if(match == false){
+		 unmatched.push({"area_code" : fips, "sector_id": obj1[i].sector_id, "county" : "", "job_title" : "MISSING", "population_year" : yr, "total_jobs" : "0", "category" : "MISSING", "bar_color" : "MISSING"})
+		}; //match
+       };  //i loop
+
+//Concatenating arrays
+
+outArray = obj2.concat(unmatched);
+outArray.sort(function(a, b){ return d3.ascending(+a['sector_id'], +b['sector_id']); })
+return outArray;
+}  //end of unmatchedArray
+
+//fixMISS Resolves the missing values in the dataset
+function fixMISS(elem1,elem2) {
+	 if(elem1 == "MISSING" && elem2 !== "MISSING"){
+	            var elemOut = elem2;
+               } else if(elem1 !== "MISSING" && elem2 == "MISSING") {
+				var elemOut = elem1;
+		    	} else {
+				var elemOut = elem1;
+				};
+return elemOut;
+}; //end of fixMISS
+	
 //diffData calculates differences between two data sets
+
 function diffData(data1, data2) {
 
-  var outData = join(data1,data2,"sector_id","sector_id", function(dat,col){
+
+//find missing records
+
+var sector_list = [{'sector_id' : '01000'},
+				   {'sector_id' : '02000'},
+					{'sector_id' : '03000'},
+					{'sector_id' : '04000'},
+					{'sector_id' : '05000'},
+					{'sector_id' : '06000'},
+					{'sector_id' : '07000'},
+					{'sector_id' : '08000'},
+					{'sector_id' : '09000'},
+					{'sector_id' : '100000'},
+					{'sector_id' : '10150'},
+					{'sector_id' : '11000'},
+					{'sector_id' : '11025'},
+					{'sector_id' : '11050'},
+					{'sector_id' : '12000'},
+					{'sector_id' : '12015'},
+					{'sector_id' : '13000'},
+					{'sector_id' : '13015'},
+					{'sector_id' : '14000'},
+					{'sector_id' : '15010'},
+					{'sector_id' : '15014'},
+					{'sector_id' : '15020'},
+					{'sector_id' : '15030'}];
+
+
+data1.sort(function(a, b){ return d3.ascending(+a['sector_id'], +b['sector_id']); })
+var res1 = unmatchedArray(sector_list,data1)	;				
+
+data2.sort(function(a, b){ return d3.ascending(+a['sector_id'], +b['sector_id']); })
+var res2 = unmatchedArray(sector_list,data2)	;
+
+  var outData = join(res1,res2,"sector_id","sector_id", function(dat,col){
            return{
 			   area_code : dat.area_code,
 			   sector_id: dat.sector_id,
 			   county: (dat != undefined) ? dat.county : col.county,
-			   job_title: (dat != undefined) ? dat.job_title : col.job_title,
+			   job_title1:  col.job_title,
+			   job_title2: dat.job_title,
 			   population_year1: (col != undefined) ? col.population_year : 0,
 			   population_year2: (dat != undefined) ? dat.population_year : 0,
 			   total_jobs1 : (col != undefined) ? col.total_jobs : 0,
 			   total_jobs2 : (dat != undefined) ? dat.total_jobs : 0,
-			   category : (dat != undefined) ? dat.category : col.category,
-			   bar_color: (dat != undefined) ? dat.bar_color : col.bar_color
+			   category1 : col.category,
+			   category2 : dat.category,
+			   bar_color1 : col.bar_color,
+			   bar_color2 : dat.bar_color
 			   };
 			   
 			   
 });
 
-outData.forEach(function(d) { d.diffJobs = Number(d.total_jobs2) - Number(d.total_jobs1)});
+outData.forEach(function(d) { d.diffJobs = Math.round(d.total_jobs2) - Math.round(d.total_jobs1)});
 
 
-outData.sort(function(a, b){ return d3.descending(+a['diffJobs'], +b['diffJobs']); })
+//Fixing MISSING values
+outData2 = outData.filter( function(d) { if(!((d.job_title1 == "MISSING" && d.job_title2 == "MISSING"))){ return d;}});
 
-return(outData);
+outData2.forEach( function(d) {d.job_title = fixMISS(d.job_title1,d.job_title2);});
+outData2.forEach( function(d) {d.category = fixMISS(d.caregory1,d.category2);});
+outData2.forEach( function(d) {d.bar_color = fixMISS(d.bar_color1,d.bar_color2);});
+
+outData2.sort(function(a, b){ return d3.descending(+a['diffJobs'], +b['diffJobs']); })
+return(outData2);
 };
 
 
@@ -824,7 +896,7 @@ var totalYr2 = datain.filter(function(d) {
                  if( d.population_year == endYEAR && d.area_code == seldFIPS && d.sector_id == "00000") { return d; }
              });
 
-var totalChng = Number(totalYr2[0].total_jobs) - Number(totalYr1[0].total_jobs);
+var totalChng = Math.round(totalYr2[0].total_jobs) - Math.round(totalYr1[0].total_jobs);
 
 genCustomChart(dataDiff,totalChng,seldCTY,begYEAR,endYEAR);
 
@@ -1249,14 +1321,8 @@ graph.append("text")
 
 //Table, not really...
 
-var tabtxt = formatComma(rndJobs(totalDiff)) + " Total Employment Change";
-var tabdata = [ {"color" : "#FFFFFF","text" : tabtxt},
-			{"color" : '#D85F02',"text" : "Less than 80% of Average Weekly Wage"},
-			{"color" : '#757083', "text" : "Between 81% to 120% of Average Weekly Wage"},
-			{"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage"}];
-
 var pos = x_axis(0);
-var tabArray = jobsHdr(tabdata,0,yLen,barSpace,barHeight,totalDiff,pos, 1);
+var tabArray = jobsHdr(outdata,0,yLen,barSpace,barHeight,totalDiff,pos, 1);
 
 if(pos > 400) {
    var rectanchorX = width * .20;
