@@ -105,9 +105,6 @@ if(type == 0){ //For the Count and Difference Tables
 		if(jobsRnd > 1000000){
 		   var jobVal = formatDecimal(jobsRnd/1000000);
 		   var jobStr = jobVal + " Million Total Estimated Jobs";
-		} else if(jobsRnd > 1000) {
-		   var jobVal = formatDecimal(jobsRnd/1000);
-		   var jobStr = jobVal + " Thousand Total Estimated Jobs";
         } else {
 		   var jobStr = formatComma(jobsRnd) + " Total Estimated Jobs";
         };
