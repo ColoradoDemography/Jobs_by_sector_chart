@@ -1209,6 +1209,7 @@ var graph = d3.select("#chart")
 	     .append("svg")
 		 .attr("preserveAspectRatio", "xMinYMin meet")
          .attr("viewBox", [0, 0, width, height]);
+		 
 if(YEAR1 == YEAR2) {
 	var titStr = "The selected year values are equal.  Please adjust the 'Start Year' or 'End Year' values.";
 	graph.append("text")
@@ -1218,7 +1219,7 @@ if(YEAR1 == YEAR2) {
 			.style("font", "16px sans-serif") 
 			.style("text-decoration", "underline")  
 			.text(titStr);
-} else if(+YEAR1 > +YEAR2) {
+} else if((+YEAR1 > +YEAR2) && (+YEAR2 != 2001)) {
 	var titStr = "The 'Start Year' value is greater than the 'End Year' value.  Please adjust the 'Start Year' or 'End Year' values.";
 	graph.append("text")
 			.attr("x", (width / 2))             
@@ -1227,7 +1228,7 @@ if(YEAR1 == YEAR2) {
 			.style("font", "16px sans-serif") 
 			.style("text-decoration", "underline")  
 			.text(titStr);
-} else {
+} else if(+YEAR2 > 2001) {
 //Title
 var titStr = "Employment Change by Sector. " + CTY +" "+ YEAR1 +" to "+ YEAR2;
 graph.append("text")
@@ -1321,7 +1322,7 @@ graph.append("text")
 var pos = x_axis(0);
 var tabArray = jobsHdr(outdata,0,yLen,barSpace,barHeight,totalDiff,pos, 1);
 
-if(pos > 350) {
+if(pos > 300) {
    var rectanchorX = width * .20;
 } else {
     var rectanchorX = width * .75;
@@ -1350,7 +1351,17 @@ table.selectAll("text")
     .text( function(d) { return d.text;})
 	.style("font", "9px sans-serif");
 	
-} //Error Message
+} else {
+	var titStr = "Please adjust the 'End Year' value.";
+	graph.append("text")
+			.attr("x", (width / 2))             
+			.attr("y", margin.top + 10 )
+			.attr("text-anchor", "middle")  
+			.style("font", "16px sans-serif") 
+			.style("text-decoration", "underline")  
+			.text(titStr);
+}
+	//Error Message
 return graph.node();
  
 };  //end of genCustomChart
