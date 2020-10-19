@@ -682,7 +682,6 @@ function exportToCsv(filename, rows) {
             }
         }
     };
-
 function imageDownload(outFileName) {
       // Retrieve svg node
 	  const svg = d3.select("svg");
@@ -697,6 +696,7 @@ function imageDownload(outFileName) {
           const canvas = document.createElement('canvas');
           // Set width and height based on SVG node
           const rect = svgNode.getBoundingClientRect();
+		  
           canvas.width = rect.width * quality;
           canvas.height = rect.height * quality;
 
@@ -707,7 +707,7 @@ function imageDownload(outFileName) {
           context.drawImage(image, 0, 0, rect.width * quality, rect.height * quality);
 
           // Set some image metadata
-          let dt = canvas.toDataURL('image/png');
+          let dt = canvas.toDataURL('image/png', 1.0);
 
           // Invoke saving function
           saveAs(dt, outFileName);
@@ -722,7 +722,7 @@ function imageDownload(outFileName) {
 
       // This function invokes save window
       function saveAs(uri, filename) {
-	  
+	  debugger;
         // create link
         var link = document.createElement('a');
         if (typeof link.download === 'string') {
@@ -1321,7 +1321,7 @@ graph.append("text")
 var pos = x_axis(0);
 var tabArray = jobsHdr(outdata,0,yLen,barSpace,barHeight,totalDiff,pos, 1);
 
-if(pos > 400) {
+if(pos > 350) {
    var rectanchorX = width * .20;
 } else {
     var rectanchorX = width * .75;
