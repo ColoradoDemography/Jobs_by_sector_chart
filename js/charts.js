@@ -1,3 +1,4 @@
+//Jobs by Sector main functions
 //UTILITY FUNCTIONS
 
 //WEBSITE DOM FUNCTIONS
@@ -682,83 +683,123 @@ function exportToCsv(filename, rows) {
             }
         }
     };
+
+
 function imageDownload(outFileName) {
-      // Retrieve svg node
-	  const svg = d3.select("svg");
-      const svgNode = svg.node();
+      // This is copied from http://bl.ocks.org/Rokotyan/0556f8facbaf344507cdc45dc3622177f
+    var svg = d3.select('svg');
+	var bbox = svg.node().getBBox();
+	var width = bbox.width;
+	var height = bbox.height;
+	
+	var svgString = getSVGString(svg.node());
+	svgString2Image( svgString, 2*width, 2*height, 'png', save ); // passes Blob and filesize String to the callback
 
-        // Get image quality index (basically,  index you can zoom in)
-        const quality = 3;
-        // Create image
-        const image = new Image();
-        image.onload = () => {
-	   // Create image canvas
-          const canvas = document.createElement('canvas');
-          // Set width and height based on SVG node
-          const rect = svgNode.getBoundingClientRect();
-		  
-          canvas.width = rect.width * quality;
-          canvas.height = rect.height * quality;
+	function save( dataBlob, filesize ){
+		saveAs( dataBlob, outFileName ); // FileSaver.js function
+	}
+}; //End of imageDownload
 
-          // Draw background
-          const context = canvas.getContext('2d');
-          context.fillStyle = '#FAFAFA';
-          context.fillRect(0, 0, rect.width * quality, rect.height * quality);
-          context.drawImage(image, 0, 0, rect.width * quality, rect.height * quality);
+// getSVGString ( svgNode ) and svgString2Image( svgString, width, height, format, callback )
+function getSVGString( svgNode ) {
 
-          // Set some image metadata
-          let dt = canvas.toDataURL('image/png', 1.0);
+	svgNode.setAttribute('xlink', 'http://www.w3.org/1999/xlink');
+	var cssStyleText = getCSSStyles( svgNode );
+	appendCSS( cssStyleText, svgNode );
 
-          // Invoke saving function
-          saveAs(dt, outFileName);
+	var serializer = new XMLSerializer();
+	var svgString = serializer.serializeToString(svgNode);
+	svgString = svgString.replace(/(\w+)?:?xlink=/g, 'xmlns:xlink='); // Fix root xlink without namespace
+	svgString = svgString.replace(/NS\d+:href/g, 'xlink:href'); // Safari NS namespace fix
 
-        };
+	return svgString;
+
+	function getCSSStyles( parentElement ) {
+		var selectorTextArr = [];
+
+		// Add Parent element Id and Classes to the list
+		selectorTextArr.push( '#'+parentElement.id );
+		for (var c = 0; c < parentElement.classList.length; c++)
+				if ( !contains('.'+parentElement.classList[c], selectorTextArr) )
+					selectorTextArr.push( '.'+parentElement.classList[c] );
+
+		// Add Children element Ids and Classes to the list
+		var nodes = parentElement.getElementsByTagName("*");
+		for (var i = 0; i < nodes.length; i++) {
+			var id = nodes[i].id;
+			if ( !contains('#'+id, selectorTextArr) )
+				selectorTextArr.push( '#'+id );
+
+			var classes = nodes[i].classList;
+			for (var c = 0; c < classes.length; c++)
+				if ( !contains('.'+classes[c], selectorTextArr) )
+					selectorTextArr.push( '.'+classes[c] );
+		}
+
+		// Extract CSS Rules
+		var extractedCSSText = "";
+		for (var i = 0; i < document.styleSheets.length; i++) {
+			var s = document.styleSheets[i];
+			
+			try {
+			    if(!s.cssRules) continue;
+			} catch( e ) {
+		    		if(e.name !== 'SecurityError') throw e; // for Firefox
+		    		continue;
+		    	}
+
+			var cssRules = s.cssRules;
+			for (var r = 0; r < cssRules.length; r++) {
+				if ( contains( cssRules[r].selectorText, selectorTextArr ) )
+					extractedCSSText += cssRules[r].cssText;
+			}
+		}
+		
+
+		return extractedCSSText;
+
+		function contains(str,arr) {
+			return arr.indexOf( str ) === -1 ? false : true;
+		}
+
+	}
+
+	function appendCSS( cssText, element ) {
+		var styleElement = document.createElement("style");
+		styleElement.setAttribute("type","text/css"); 
+		styleElement.innerHTML = cssText;
+		var refNode = element.hasChildNodes() ? element.children[0] : null;
+		element.insertBefore( styleElement, refNode );
+	}
+};
 
 
-        var url = 'data:image/svg+xml; charset=utf8, ' + encodeURIComponent(serializeString(svgNode));
+function svgString2Image( svgString, width, height, format, callback ) {
+	var format = format ? format : 'png';
 
-        image.src = url// URL.createObjectURL(blob);
-      
+	var imgsrc = 'data:image/svg+xml;base64,'+ btoa( unescape( encodeURIComponent( svgString ) ) ); // Convert SVG string to data URL
 
-      // This function invokes save window
-      function saveAs(uri, filename) {
-	  debugger;
-        // create link
-        var link = document.createElement('a');
-        if (typeof link.download === 'string') {
-          document.body.appendChild(link); // Firefox requires the link to be in the body
-          link.download = filename;
-          link.href = uri;
-          link.click();
-          document.body.removeChild(link); // remove the link when done
-        } else {
-          location.replace(uri);
-        }
-      }
+	var canvas = document.createElement("canvas");
+	var context = canvas.getContext("2d");
 
-      // This function serializes SVG and sets all necessary attributes
-      function serializeString(svg) {
-	 
-        const xmlns = 'http://www.w3.org/2000/xmlns/';
-        const xlinkns = 'http://www.w3.org/1999/xlink';
-        const svgns = 'http://www.w3.org/2000/svg';
-        svg = svg.cloneNode(true);
-        const fragment = window.location.href + '#';
-        const walker = document.createTreeWalker(svg, NodeFilter.SHOW_ELEMENT, null, false);
-        while (walker.nextNode()) {
-          for (const attr of walker.currentNode.attributes) {
-            if (attr.value.includes(fragment)) {
-              attr.value = attr.value.replace(fragment, '#');
-            }
-          }
-        }
-        svg.setAttributeNS(xmlns, 'xmlns', svgns);
-        svg.setAttributeNS(xmlns, 'xmlns:xlink', xlinkns);
-        const serializer = new XMLSerializer();
-        const string = serializer.serializeToString(svg);
-        return string;
-      }
-    };
+	canvas.width = width;
+	canvas.height = height;
+
+	var image = new Image();
+	image.onload = function() {
+		context.clearRect ( 0, 0, width, height );
+		context.drawImage(image, 0, 0, width, height);
+
+		canvas.toBlob( function(blob) {
+			var filesize = Math.round( blob.length/1024 ) + ' KB';
+			if ( callback ) callback( blob, filesize );
+		});
+
+		
+	};
+
+	image.src = imgsrc;
+};
 
 
 //CHART FUNCTIONS
