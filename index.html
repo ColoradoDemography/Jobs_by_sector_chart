@@ -36,18 +36,21 @@
   </select>
   <button id="btnSave">Download Chart</button>
   <button id="btnData">Download Data</button>
+  <p><i>Image Downloads are optimized for Chrome and Microsoft Edge browsers.</i> For <i>Firefox</i> users, right-click on the image and choose the "Select a Screenshot" option to save the image.</p>
   </form>
-<p><i>  This application is optimized for Chrome and Microsoft Edge browsers.</i></p>
+
 <hr>
 Access the SDO Jobs by Sector(NAICS) <a href="https://demography.dola.colorado.gov/economy-labor-force/data/jobs-by-sector/#jobs-by-sector-naics" target="_blank"> Data Download Page</a>
 <hr>
 </div>
 
 <div id= "chart"></div>
-    
+
 
 
 <script src="https://d3js.org/d3.v6.min.js"></script>  <!-- Main D3 Library -->
+<script src="http://cdn.jsdelivr.net/g/filesaver.js"></script>  <!-- filesaver library -->
+<script src="https://cdn.jsdelivr.net/npm/blueimp-canvas-to-blob@3.28.0/js/canvas-to-blob.min.js"></script>
 
 <!-- chart Functions: InitialChart, updateCountDhart, updatePCTChart, updateCustomChart, genCountChart, genPCTChart -->
 <script type="text/javascript" src="js/charts.js"></script>
@@ -190,6 +193,7 @@ d3.select("#btnData").on("click", function(event) {
  });
  
  d3.select("#btnSave").on("click", function(event) {
+
   event.preventDefault();
   	
 	var seldCTY = d3.select('#selCty option:checked').text();
