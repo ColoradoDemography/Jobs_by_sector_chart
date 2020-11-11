@@ -692,7 +692,7 @@ saveSvgAsPng(svg_node, outFileName);
 
 }; //End of imageDownload
 
-/
+
 //CHART FUNCTIONS
 //initialChart reads information from the dropdowns, updates the title block and calls genCountChart to produce the initial static chart
 function initialChart(datain) {  
