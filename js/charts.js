@@ -403,6 +403,7 @@ var outdata = join(barLabels,indata,"sector_id","sector_id",function(dat,col){
 			   job_title: (col !== undefined) ? col.job_title : dat.job_title,
 			   population_year: dat.population_year,
 			   total_jobs: dat.total_jobs,
+			   avg_wage : dat.Avg_wage,
 			   category : dat.category
 			   };
 			   }).filter(function(d) {return d.job_title != null;})
@@ -417,6 +418,7 @@ var outdata = join(barColors,outdata,"category","category", function(dat,col){
 			   job_title: dat.job_title,
 			   population_year: dat.population_year,
 			   total_jobs: dat.total_jobs,
+			   avg_wage : dat.avg_wage,
 			   category : dat.category,
 			   bar_color: (col !== undefined) ? col.bar_color : null  
 			   };
@@ -554,6 +556,9 @@ return(outData2);
 function dataDownload(datain, chartType){
 
     var formatComma = d3.format(",");
+	var formatDecimalComma = d3.format(",.0f");
+    var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
+
 	
 	var seldCTY = d3.select('#selCty option:checked').text();
 	var seldFIPS = switchFIPS(seldCTY);
@@ -580,7 +585,9 @@ if(chartType == 0){ //Count Data
 		fips_code : item.area_code,
 		county: item.county_name,
 		job_category : item.job_title,
+		wage_category : item.category,
 		year: item.population_year,
+		wage : formatDollar(item.avg_wage),
 		jobs: formatComma(Math.round(item.total_jobs))}));
      };
 	 
@@ -934,7 +941,7 @@ var tabArray = jobsHdr(tabdata,YEAR,yLen,barSpace,barHeight,0,pos, 0);
 if(pos > 400) {
    var rectanchorX = width * .20;
 } else {
-    var rectanchorX = width * .75;
+    var rectanchorX = width * .80;
 }; 
 
 var table =  graph.append("g")
