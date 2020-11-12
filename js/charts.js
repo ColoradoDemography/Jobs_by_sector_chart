@@ -84,7 +84,7 @@ function jobsHdr(tdata,yr,posLen,bSpace,bHeight,jobsD,xPos, type){
 
 //Comma format
 var formatComma = d3.format(",");
-var formatDecimal = d3.format(".2");
+var formatDecimal = d3.format(".3");
 //Dollar Format
 var formatDecimalComma = d3.format(",.0f");
 var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
