@@ -515,12 +515,13 @@ var res1 = unmatchedArray(sector_list,data1)	;
 
 data2.sort(function(a, b){ return d3.ascending(+a['sector_id'], +b['sector_id']); })
 var res2 = unmatchedArray(sector_list,data2)	;
-
+debugger;
   var outData = join(res1,res2,"sector_id","sector_id", function(dat,col){
            return{
 			   area_code : dat.area_code,
 			   sector_id: dat.sector_id,
 			   county: (dat != undefined) ? dat.county : col.county,
+			   NAICS : (dat != undefined) ? dat.sector_id : col.sector_id,
 			   job_title1:  col.job_title,
 			   job_title2: dat.job_title,
 			   population_year1: (col != undefined) ? col.population_year : 0,
@@ -582,7 +583,7 @@ if(chartType == 0){ //Count Data
     }
    });
    
-   debugger;
+
    var dataOut2 = dataOut.map(item => ({
 		fips_code : item.area_code,
 		county: item.county_name,
@@ -626,6 +627,7 @@ if(chartType == 2) {
       var dataOut2 = dataOut.map(item => ({
 		fips_code : item.area_code,
 		county: item.county_name,
+		NAICS : item.sector_id,
 		job_category : item.job_title,
 		year_1: item.population_year1,
 		jobs_year_1: formatComma(Math.round(item.total_jobs1)),
