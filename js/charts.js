@@ -372,15 +372,15 @@ function genData(indata) {
 					{ 'sector_id' : '07000', 'job_title' : 'Retail Trade'},
 					{ 'sector_id' : '08000', 'job_title' : 'Transportation and Warehousing'},
 					{ 'sector_id' : '09000', 'job_title' : 'Information'},
-					{ 'sector_id' : '100000', 'job_title' : 'Financial Activities'},
+					{ 'sector_id' : '10000', 'job_title' : 'Financial Activities'},
 					{ 'sector_id' : '10150', 'job_title' : 'Real Estate'},
-					{ 'sector_id' : '11000', 'job_title' : 'Professional and Technical Services'},
-					{ 'sector_id' : '11025', 'job_title' : 'Management of Companies '},
-					{ 'sector_id' : '11050', 'job_title' : 'Administration and Waste'},
-					{ 'sector_id' : '12000', 'job_title' : 'Private Education'},
+					{ 'sector_id' : '11000', 'job_title' : 'Prof., Sci. and Tech. Services'},
+					{ 'sector_id' : '11025', 'job_title' : 'Mngmt. of Companies'},
+					{ 'sector_id' : '11050', 'job_title' : 'Admin. Support and Waste Mngmt.'},
+					{ 'sector_id' : '12000', 'job_title' : 'Education'},
 					{ 'sector_id' : '12015', 'job_title' : 'Health Services'},
-					{ 'sector_id' : '13000', 'job_title' : 'Arts, Entertainment & Recreation'},
-					{ 'sector_id' : '13015', 'job_title' : 'Accommodation and Food'},
+					{ 'sector_id' : '13000', 'job_title' : 'Arts, Entertainment and Recreation'},
+					{ 'sector_id' : '13015', 'job_title' : 'Accommodation and Food Services'},
 					{ 'sector_id' : '14000', 'job_title' : 'Other Services'},
 					{ 'sector_id' : '15010', 'job_title' : 'Federal Government'},
 					{ 'sector_id' : '15014', 'job_title' : 'Military'},
@@ -494,7 +494,7 @@ var sector_list = [{'sector_id' : '01000'},
 					{'sector_id' : '07000'},
 					{'sector_id' : '08000'},
 					{'sector_id' : '09000'},
-					{'sector_id' : '100000'},
+					{'sector_id' : '10000'},
 					{'sector_id' : '10150'},
 					{'sector_id' : '11000'},
 					{'sector_id' : '11025'},
@@ -581,9 +581,12 @@ if(chartType == 0){ //Count Data
           e["county_name"] = seldCTY;
     }
    });
+   
+   debugger;
    var dataOut2 = dataOut.map(item => ({
 		fips_code : item.area_code,
 		county: item.county_name,
+		NAICS : item.sector_id,
 		job_category : item.job_title,
 		wage_category : item.category,
 		year: item.population_year,
@@ -661,6 +664,7 @@ function pctDownload(dataOut) {  //A special workaround for to download the PCT 
       var dataOut2 = dataOut.map(item => ({
 		fips_code : item.area_code,
 		county: item.county_name,
+		NAICS : item.sector_id,
 		job_category : item.job_title,
 		year: item.population_year,
 		jobs: formatComma(Math.round(item.total_jobs)),
