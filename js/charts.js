@@ -78,6 +78,20 @@ function extendAxis(indata){
 	return(outArray);
 }
 
+//captionTxt specifies the chart caption
+
+function captionTxt(posY) {
+	debugger;
+	//Date Format
+   var formatDate = d3.timeFormat("%m/%d/%Y");
+   var dateStr = "Programming by the State Demography Office, Print Date: "+ formatDate(new Date);
+   var capTxt = [
+                  {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
+		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: November, 2019.",  "ypos" : posY + 10},    //Update this line as the production date changes
+				  {"captxt" : dateStr,  "ypos" : posY + 20}
+				 ];
+return(capTxt);
+};
 
 //jobsHdr appends the jobs table objects into the svg 
 function jobsHdr(tdata,yr,posLen,bSpace,bHeight,jobsD,xPos, type){
@@ -930,14 +944,21 @@ graph.append("g")
       .call(d3.axisLeft(y_axis));
 	  
 
-//caption
-var caption = "Source:  State Demography Office, Print Date: "+ formatDate(new Date);
-graph.append("text")
-        .attr("x", 165)             
-        .attr("y", yLen + 100)
+//caption  s
+debugger;
+
+var captionStr = captionTxt(yLen + 100);
+var caption =  graph.append("g")
+	     .attr("class","tabobj");
+caption.selectAll("text")
+        .data(captionStr)
+		.enter()
+        .append("text")
+        .text(function(d) {return d.captxt})
+	    .attr("x", 165)             
+        .attr("y", function(d) {return d.ypos})
         .attr("text-anchor", "right")  
-        .style("font", "9px sans-serif")   
-        .text(caption);
+        .style("font", "9px sans-serif");
 
 //Table
 
@@ -1063,13 +1084,18 @@ graph.append("g")
 	  
 
 //caption
-var caption = "Source:  State Demography Office, Print Date: "+ formatDate(new Date);
-graph.append("text")
-        .attr("x", 165)             
-        .attr("y", yLen + 100)
+var captionStr = captionTxt(yLen + 100);
+var caption =  graph.append("g")
+	     .attr("class","tabobj");
+caption.selectAll("text")
+        .data(captionStr)
+		.enter()
+        .append("text")
+        .text(function(d) {return d.captxt})
+	    .attr("x", 165)             
+        .attr("y", function(d) {return d.ypos})
         .attr("text-anchor", "right")  
-        .style("font", "9px sans-serif")   
-        .text(caption);
+        .style("font", "9px sans-serif");
 
 //Table
 var pos = x_axis(0);
@@ -1252,15 +1278,18 @@ graph.append("text")
 		.style("font", "9px sans-serif");
 
 //caption
-var caption = "Source:  State Demography Office, Print Date: "+ formatDate(new Date);
-graph.append("text")
-        .attr("x", 165)             
-        .attr("y", yLen + 100)
+var captionStr = captionTxt(yLen + 100);
+var caption =  graph.append("g")
+	     .attr("class","tabobj");
+caption.selectAll("text")
+        .data(captionStr)
+		.enter()
+        .append("text")
+        .text(function(d) {return d.captxt})
+	    .attr("x", 165)             
+        .attr("y", function(d) {return d.ypos})
         .attr("text-anchor", "right")  
-        .style("font", "9px sans-serif")   
-        .text(caption);
-
-
+        .style("font", "9px sans-serif");
 
 //Table, not really...
 
