@@ -21,7 +21,7 @@
     <option value="000">Colorado</option>
   </select>
   <select id="selYear">
-    <option>2001</option>
+    <option value="2001">2001</option>
   </select>
   <button id="btnCount">Jobs: Counts</button>
   <button id="btnPercent"> Jobs: Percent</button>
@@ -50,7 +50,7 @@ Access the SDO Jobs by Sector(NAICS) <a href="https://demography.dola.colorado.g
 <script src="https://d3js.org/d3.v6.min.js"></script>  <!-- Main D3 Library -->
 <script type="text/javascript" src="js/saveSvgAsPng.js"></script>
 
-<!-- chart Functions: InitialChart, updateCountDhart, updatePCTChart, updateCustomChart, genCountChart, genPCTChart -->
+<!-- chart Functions: InitialChart, updateCountDhart, updatePCTChart, updateDiffChart, genCountChart, genPCTChart -->
 <script type="text/javascript" src="js/charts.js"></script>
 <script>
 
@@ -59,7 +59,7 @@ Access the SDO Jobs by Sector(NAICS) <a href="https://demography.dola.colorado.g
 //MAIN PROGRAM
 
  //Populate dropdowns
- 
+
 //Counties
 var counties = [{'county': '', 'fips': ''},{'county':'Adams County', 'fips': '001'},
                 {'county':'Alamosa County', 'fips': '003'},{'county':'Arapahoe County', 'fips': '005'},
@@ -106,50 +106,51 @@ var counties = [{'county': '', 'fips': ''},{'county':'Adams County', 'fips': '00
 
 //Building Years dropdown
 
+	
+d3.json("https://gis.dola.colorado.gov/lookups/jobsYRS").then(function(json1) {
 
-d3.csv("./data/jobs_by_sector_cat.csv").then(function(indata){
+ var yrsList = json1.map(function(d){return d.population_year;});
+ var lastYr = d3.max(yrsList);
 
 //Building Years dropdown
-var yrs = indata.map(function(d){return d.population_year;});
-var yrsList = [...new Set(yrs)];
- 
 
 d3.select("#selYear")
-				.selectAll('option')
-				.data(yrsList)
-				.enter()
-				.append('option')
-				.attr('value', function(d) {return d;}) 
-				.text(function(d) {return d;})
-				.property("selected", function(d) {return d3.max(d)});
-		
+	.selectAll('option')
+	.data(yrsList)
+	.enter()
+	.append('option')
+	.attr('value', function(d) {return d;}) 
+	.text(function(d) {return d;})
+	.property("selected", lastYr);
+	
+
 
 //The inital chart
 var chartType = 0;
   hideDD();
-  initialChart(indata);
-
+  initialChart();
 
 //The onchange events:  Change of County
 d3.select("#selCty").on("change", function(d,i) {
      if(chartType == 0)  {
-         updateCountChart(indata);
+         updateCountChart();
 		 };
 	  if(chartType == 1) {
-	    updatePCTChart(indata,0);
+	    updatePCTChart(0);
 		};
-	  if(chartType == 2) { //This is for the custom year chart...
-	    updateCustomChart(indata);
+	  if(chartType == 2) { //This is for the Diff year chart...
+	    updateDiffChart();
 	  };
 	});
 
 //Change of Year
 d3.select("#selYear").on("change", function(d,i) {
+debugger;
       if(chartType == 0)  {
-         updateCountChart(indata);
+         updateCountChart();
 		 };
 	  if(chartType == 1) {
-	    updatePCTChart(indata,0);
+	    updatePCTChart(0);
 		};
 	});
 
@@ -157,7 +158,7 @@ d3.select("#selYear").on("change", function(d,i) {
 //Change of beginning year -- triggers comparison chart...
 d3.select("#begYear").on("change", function(d,i) {
    if(chartType == 2) {
-       updateCustomChart(indata);
+       updateDiffChart();
 	};
  });
  
@@ -165,7 +166,7 @@ d3.select("#begYear").on("change", function(d,i) {
 //Change of end year -- triggers comparison chart...
 d3.select("#endYear").on("change", function(d,i) {
    if(chartType == 2) {
-       updateCustomChart(indata);
+       updateDiffChart();
 	};
  });
  
@@ -174,23 +175,23 @@ d3.select("#endYear").on("change", function(d,i) {
 d3.select("#btnCount").on("click", function(event) {
        chartType = 0;
        hideDD()
-       updateCountChart(indata);
+       updateCountChart();
       });
 
 d3.select("#btnPercent").on("click", function(event) {
        chartType = 1;
 	   hideDD()
-       updatePCTChart(indata,0);
+       updatePCTChart();
       });
 
 d3.select("#btnComp").on("click", function(event) {
        chartType = 2;
        showDD(yrsList);
- });
+ }); //Preparation of comparison chart this sets the charttype value and displays beginning and end yeat dialogs for Diff chart
 d3.select("#btnData").on("click", function(event) {
           event.preventDefault();
-          dataDownload(indata, chartType);
- });
+          dataDownload(chartType);
+ });  //Data Download
  
  d3.select("#btnSave").on("click", function(event) {
 
@@ -213,9 +214,10 @@ d3.select("#btnData").on("click", function(event) {
 
 	
 	imageDownload(fileNamePNG);
- });
+ });  //btnSave
 
-});//end program
+
+});//end program (yrgen)
  
  </script>
 
