@@ -2,7 +2,7 @@
 //UTILITY FUNCTIONS
 
 //WEBSITE DOM FUNCTIONS
-function hideDD() { //Hides the Custom Dropdowns
+function hideDD() { //Hides the Diff Dropdowns
   document.getElementById("selYear").style.visibility = "visible";
   document.getElementById("selYear").disabled = false;
   document.getElementById("begLabel").style.visibility = "hidden";
@@ -81,13 +81,13 @@ function extendAxis(indata){
 //captionTxt specifies the chart caption
 
 function captionTxt(posY) {
-	debugger;
+
 	//Date Format
    var formatDate = d3.timeFormat("%m/%d/%Y");
    var dateStr = "Programming by the State Demography Office, Print Date: "+ formatDate(new Date);
    var capTxt = [
                   {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: November, 2019.",  "ypos" : posY + 10},    //Update this line as the production date changes
+		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: November, 2020.",  "ypos" : posY + 10},    //Update this line as the production date changes
 				  {"captxt" : dateStr,  "ypos" : posY + 20}
 				 ];
 return(capTxt);
@@ -353,6 +353,7 @@ function switchFIPS(county){
 return fips;
 };
 
+
 //Join function from http://learnjsdata.com/combine_data.html
 
 function join(lookupTable, mainTable, lookupKey, mainKey, select) {
@@ -372,8 +373,25 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
     return output;
 };
 
+//buildData creates the basic data set
+function buildData(jData,wData){
+  
+	var outData = join(jData,wData,"sector_id","sector_id",function(dat,col){
+		return{
+			area_code : col.area_code,
+			sector_id : col.sector_id,
+			population_year : col.population_year,
+			total_jobs : col.total_jobs,
+			avg_wage : (dat !== undefined) ? dat.avg_wage : 0,
+			category : (dat !== undefined) ? dat.category : ""
+		};
+	});
+
+return(outData);
+} //End buildData
+
 //genData processes the data for the static chart
-function genData(indata) {  
+function genData(indata, TYPE) {  
 
 // Creating label array  
   var barLabels = [ { 'sector_id' : '00000', 'job_title' : 'Total Jobs'},
@@ -417,12 +435,16 @@ var outdata = join(barLabels,indata,"sector_id","sector_id",function(dat,col){
 			   job_title: (col !== undefined) ? col.job_title : dat.job_title,
 			   population_year: dat.population_year,
 			   total_jobs: dat.total_jobs,
-			   avg_wage : dat.Avg_wage,
+			   avg_wage : dat.avg_wage,
 			   category : dat.category
 			   };
 			   }).filter(function(d) {return d.job_title != null;})
-			     .filter(function(d) {return d.total_jobs > 0;})
-				 .filter(function(d) {return d.sector_id != "00000";});
+			     .filter(function(d) {return d.total_jobs > 0;});
+				 
+//TYPE == 0 is for chart output, removes the total jobs row
+if(TYPE == 0){
+	var outdata = outdata.filter(function(d) {return d.sector_id != "00000";});
+};
 				 
 var outdata = join(barColors,outdata,"category","category", function(dat,col){
            return{
@@ -446,15 +468,13 @@ outdata.sort(function(a, b){ return d3.descending(+a['total_jobs'], +b['total_jo
 return outdata;
 }; //end of genData
 
-//genPCTData calculates percentage from processed data...
-function genPCTData(indata,jobsdata){
+//createAdjData calculates percentage from processed data...
+function createAdjData(jobsdata){
 
-var jobsN = +jobsdata[0].sum_jobs;
-for(i = 0; i < indata.length; i++) {
-   indata[i]["pct_jobs"] = indata[i].total_jobs/jobsN;
-   };
-return indata;
-};  //end of genPCTData
+var chartData3 = jobsdata.filter(function(d) {return d.sector_id != "00000";});
+var adjJobs = d3.rollup(chartData3, v => d3.sum(v, d => d.total_jobs));
+return(adjJobs);
+};  //end of createAdjData
 
 //unmatchedArray adds missing records prior to calculting the differences
 var unmatchedArray = function(obj1,obj2) {
@@ -491,15 +511,363 @@ function fixMISS(elem1,elem2) {
 				};
 return elemOut;
 }; //end of fixMISS
-	
+
+
+//CHART DATA FUNCTIONS
+//genChartPromise Creates execures promises and created charts
+
+function genChartPromise(FIPS,YEAR,CTY){
+
+//Formats
+var zero3 = d3.format("03d");
+var zero5 = d3.format("05d");
+
+var numFIPS = +FIPS;
+ 
+var boundaryStr = "https://gis.dola.colorado.gov/lookups/wage_bound?county=" + FIPS + "&year=" + YEAR;
+var jobsdataStr = "https://gis.dola.colorado.gov/lookups/jobs?county=" + numFIPS + "&year=" + YEAR;
+var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ FIPS + "&year=" + YEAR;
+
+var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
+
+
+Promise.all(prom).then(function(data){
+      data[0].forEach(function(d){
+		  d.area_code = zero3(d.area_code);
+		  d.sector_id = zero5(d.sector_id);
+		  d.sector_name = d.sector_name;
+		  d.population_year = d.population_year;
+		  d.total_jobs = +d.total_jobs;
+	  });
+	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
+      var chartData2 = genData(chartData,0);
+	  genCountChart(chartData2,data[2],CTY,YEAR); //Generates a bar chart
+     }).catch(function(error){
+		 console.log("Process Error");
+	 });
+ };  //end genChartPromise
+ 
+ //genDownloadCountPromise Creates execures promises and created charts
+
+function genDownloadCountPromise(FIPS,YEAR,CTY,FNAME){
+
+//Formats
+var zero3 = d3.format("03d");
+var zero5 = d3.format("05d");
+var formatComma = d3.format(",");
+var formatDecimalComma = d3.format(",.0f");
+var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
+
+var numFIPS = +FIPS;
+ 
+var jobsdataStr = "https://gis.dola.colorado.gov/lookups/jobs?county=" + numFIPS + "&year=" + YEAR;
+var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ FIPS + "&year=" + YEAR;
+
+var prom = [d3.json(jobsdataStr),d3.json(wagedataStr)];
+
+
+Promise.all(prom).then(function(data){
+      data[0].forEach(function(d){
+		  d.area_code = zero3(d.area_code);
+		  d.sector_id = zero5(d.sector_id);
+		  d.sector_name = d.sector_name;
+		  d.population_year = d.population_year;
+		  d.total_jobs = +d.total_jobs;
+	  });
+	 
+	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
+      var chartData2 = genData(chartData,1);
+	  
+	  var adjJobs = createAdjData(chartData2);
+	  
+	  var adjData = {
+		  	"fips_code" : FIPS,
+		    "county": CTY,
+		    "NAICS" : "00001",
+		    "job_category" : "Non-Suppressed Total Jobs",
+		    "wage_category" : "",
+		    "year": YEAR,
+		    "wage" : "",
+		    "jobs": formatComma(Math.round(adjJobs))};
+			
+	  var dataOut = chartData2.map(item => ({
+		fips_code : item.area_code,
+		county: CTY,
+		NAICS : item.sector_id,
+		job_category : item.job_title,
+		wage_category : item.category,
+		year: item.population_year,
+		wage : formatDollar(item.avg_wage),
+		jobs: formatComma(Math.round(item.total_jobs))}));
+		
+		var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+
+		exportToCsv(FNAME, dataOut);
+     }).catch(function(error){
+		 console.log("Process Error");
+	 });
+ };  //end genDownloadCountPromise
+
+
+ 
+ //genPCTPromise Creates execures promises and created charts
+
+function genPCTPromise(FIPS,YEAR,CTY){
+//Formats
+var zero3 = d3.format("03d");
+var zero5 = d3.format("05d");
+
+var numFIPS = +FIPS;
+ 
+var boundaryStr = "https://gis.dola.colorado.gov/lookups/wage_bound?county=" + FIPS + "&year=" + YEAR;
+var jobsdataStr = "https://gis.dola.colorado.gov/lookups/jobs?county=" + numFIPS + "&year=" + YEAR;
+var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ FIPS + "&year=" + YEAR;
+
+var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
+
+Promise.all(prom).then(function(data){
+      data[0].forEach(function(d){
+		  d.area_code = zero3(d.area_code);
+		  d.sector_id = zero5(d.sector_id);
+		  d.sector_name = d.sector_name;
+		  d.population_year = d.population_year;
+		  d.total_jobs = +d.total_jobs;
+	  });
+	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
+      var chartData2 = genData(chartData,0);
+	  
+	  // Calculating the adjusted base
+
+      var adjJobs = createAdjData(chartData2);
+	  
+	  chartData2.forEach(function(d){
+		  d.pct_jobs = +d.total_jobs/adjJobs;
+	  });
+	  genPCTChart(chartData2,data[2],CTY,YEAR); //Generates a bar chart
+     }).catch(function(error){
+		 console.log("Process Error");
+	 });
+ };  //end genPCTPromise
+
+//genDownloadPCTPromise Creates execures promises and created charts
+
+function genDownloadPCTPromise(FIPS,YEAR,CTY,FNAME){
+
+//Formats
+var zero3 = d3.format("03d");
+var zero5 = d3.format("05d");
+var formatComma = d3.format(",");
+var formatDecimalComma = d3.format(",.0f");
+var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
+var formatPercent = d3.format(".1%");
+
+var numFIPS = +FIPS;
+ 
+var jobsdataStr = "https://gis.dola.colorado.gov/lookups/jobs?county=" + numFIPS + "&year=" + YEAR;
+var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ FIPS + "&year=" + YEAR;
+
+var prom = [d3.json(jobsdataStr),d3.json(wagedataStr)];
+
+
+Promise.all(prom).then(function(data){
+      data[0].forEach(function(d){
+		  d.area_code = zero3(d.area_code);
+		  d.sector_id = zero5(d.sector_id);
+		  d.sector_name = d.sector_name;
+		  d.population_year = d.population_year;
+		  d.total_jobs = +d.total_jobs;
+	  });
+	 
+	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
+      var chartData2 = genData(chartData,1);
+	  
+      var adjJobs = createAdjData(chartData2);
+	  
+	  var adjData = {
+		  	"fips_code" : FIPS,
+		    "county": CTY,
+		    "NAICS" : "00001",
+		    "job_category" : "Non-Suppressed Total Jobs",
+		    "wage_category" : "",
+		    "year": YEAR,
+		    "wage" : "",
+		    "jobs": formatComma(Math.round(adjJobs)),
+		    "percentage" : formatPercent(1)};
+	  
+	  chartData2.forEach(function(d){
+		  d.pct_jobs = +d.total_jobs/adjJobs;
+	  });
+	  var dataOut = chartData2.map(item => ({
+		fips_code : item.area_code,
+		county: CTY,
+		NAICS : item.sector_id,
+		job_category : item.job_title,
+		wage_category : item.category,
+		year: item.population_year,
+		wage : formatDollar(item.avg_wage),
+		jobs: formatComma(Math.round(item.total_jobs)),
+		percentage : formatPercent(item.pct_jobs)}));
+		
+		var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+		
+		exportToCsv(FNAME, dataOut);
+     }).catch(function(error){
+		 console.log("Process Error");
+	 });
+ };  //end genDownloadPCTPromise
+
+
+//genDiffPromise Creates execures promises and created charts
+
+function genDiffPromise(FIPS,bYEAR,eYEAR,CTY){
+
+//Formats
+var zero3 = d3.format("03d");
+var zero5 = d3.format("05d");
+
+var numFIPS = +FIPS;
+ 
+var boundaryStr = "https://gis.dola.colorado.gov/lookups/wage_bound?county=" + FIPS + "&year=" + bYEAR + "," + eYEAR;
+var jobsdataStr = "https://gis.dola.colorado.gov/lookups/jobs?county=" + numFIPS + "&year=" + bYEAR + "," + eYEAR;
+var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ FIPS + "&year=" + bYEAR + "," + eYEAR;
+
+var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
+
+
+Promise.all(prom).then(function(data){
+      data[0].forEach(function(d){
+		  d.area_code = zero3(d.area_code);
+		  d.sector_id = zero5(d.sector_id);
+		  d.sector_name = d.sector_name;
+		  d.population_year = d.population_year;
+		  d.total_jobs = +d.total_jobs;
+	  });
+
+	  var jobsbYR = data[0].filter(function(d){return d.population_year == bYEAR});
+	  var jobseYR = data[0].filter(function(d){return d.population_year == eYEAR});
+      
+	  var wagebYR = data[1].filter(function(d) {return d.population_year == bYEAR});
+	  var wageeYR = data[1].filter(function(d) {return d.population_year == eYEAR});
+
+	  var cDatabYR = buildData(jobsbYR,wagebYR); 
+	  var cDataeYR = buildData(jobseYR,wageeYR);
+	  
+      var outDatabYR = genData(cDatabYR,0);
+	  var outDataeYR = genData(cDataeYR,0);
+
+      var dataDiff = diffData(outDatabYR,outDataeYR);
+	  
+     //Calculating difference in Total Jobs
+     var totalChng = Math.round(cDataeYR[0].total_jobs) - Math.round(cDatabYR[0].total_jobs);
+
+	  genDiffChart(dataDiff,totalChng,CTY,bYEAR,eYEAR); //Generates a bar chart
+     }).catch(function(error){
+		 console.log("Process Error");
+	 });
+ };  //end genDiffPromise
+ 
+ //genDownloadDiffPromise Creates execures promises and created charts
+
+function genDownloadDiffPromise(FIPS,bYEAR,eYEAR,CTY,FNAME){
+
+//Formats
+var zero3 = d3.format("03d");
+var zero5 = d3.format("05d");
+var formatComma = d3.format(",");
+var formatDecimalComma = d3.format(",.0f");
+var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
+
+var numFIPS = +FIPS;
+
+var boundaryStr = "https://gis.dola.colorado.gov/lookups/wage_bound?county=" + FIPS + "&year=" + bYEAR + "," + eYEAR;
+var jobsdataStr = "https://gis.dola.colorado.gov/lookups/jobs?county=" + numFIPS + "&year=" + bYEAR + "," + eYEAR;
+var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ FIPS + "&year=" + bYEAR + "," + eYEAR;
+
+var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
+
+
+Promise.all(prom).then(function(data){
+      data[0].forEach(function(d){
+		  d.area_code = zero3(d.area_code);
+		  d.sector_id = zero5(d.sector_id);
+		  d.sector_name = d.sector_name;
+		  d.population_year = d.population_year;
+		  d.total_jobs = +d.total_jobs;
+	  });
+
+	  var jobsbYR = data[0].filter(function(d){return d.population_year == bYEAR});
+	  var jobseYR = data[0].filter(function(d){return d.population_year == eYEAR});
+      
+	  var wagebYR = data[1].filter(function(d) {return d.population_year == bYEAR});
+	  var wageeYR = data[1].filter(function(d) {return d.population_year == eYEAR});
+
+	  var cDatabYR = buildData(jobsbYR,wagebYR); 
+	  var cDataeYR = buildData(jobseYR,wageeYR);
+	  
+      var outDatabYR = genData(cDatabYR,1);
+	  var outDataeYR = genData(cDataeYR,1);
+
+      var adjJobsbYR = createAdjData(outDatabYR);
+      var adjJobseYR = createAdjData(outDataeYR)
+	  
+	  var adjDatabYR = {
+		  	"area_code" : FIPS,
+		    "sector_id" : "00001",
+			"county" : CTY,
+		    "job_title" : "Non-Suppressed Total Jobs",
+		    "avg_wage" : "",
+		    "population_year": bYEAR,
+		    "total_jobs": adjJobsbYR,
+			"category" : ""};
+
+
+	  var adjDataeYR = {
+		  	"area_code" : FIPS,
+		    "sector_id" : "00001",
+			"county" : CTY,
+		    "job_title" : "Non-Suppressed Total Jobs",
+		    "avg_wage" : "",
+		    "population_year": eYEAR,
+		    "total_jobs": adjJobseYR,
+			"category" : ""};;
+			
+	  var outDatabYR = outDatabYR.concat(adjDatabYR).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
+	  var outDataeYR = outDataeYR.concat(adjDataeYR).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
+
+      var dataDiff = diffData(outDatabYR,outDataeYR);
+
+	  
+	  var dataOut = dataDiff.map(item => ({
+		fips_code : item.area_code,
+		county: item.county_name,
+		NAICS : item.sector_id,
+		job_category : item.job_title,
+		year_1: item.population_year1,
+		jobs_year_1: Math.round(item.total_jobs1),
+		wage_category_year_1 : item.category1,
+		year_2: item.population_year2,
+		jobs_year_2: Math.round(item.total_jobs2),
+		wage_category_year_2 : item.category2,
+	    difference : Math.round(item.diffJobs)}));
+		
+		var dataOut = dataOut.sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+		
+
+		exportToCsv(FNAME, dataOut);
+     }).catch(function(error){
+		 console.log("Process Error");
+	 });
+ };  //end genDownloadDiffPromise
+
 //diffData calculates differences between two data sets
 
 function diffData(data1, data2) {
 
-
 //find missing records
 
-var sector_list = [{'sector_id' : '01000'},
+var sector_list = [{'sector_id' : '00000'},
+	               {'sector_id' : '00001'},
+                   {'sector_id' : '01000'},
 				   {'sector_id' : '02000'},
 					{'sector_id' : '03000'},
 					{'sector_id' : '04000'},
@@ -524,12 +892,14 @@ var sector_list = [{'sector_id' : '01000'},
 					{'sector_id' : '15030'}];
 
 
-data1.sort(function(a, b){ return d3.ascending(+a['sector_id'], +b['sector_id']); })
-var res1 = unmatchedArray(sector_list,data1)	;				
+data1.sort(function(a, b){ return d3.ascending(a['sector_id'], b['sector_id']); });
+var res1 = unmatchedArray(sector_list,data1);
 
-data2.sort(function(a, b){ return d3.ascending(+a['sector_id'], +b['sector_id']); })
-var res2 = unmatchedArray(sector_list,data2)	;
-debugger;
+
+data2.sort(function(a, b){ return d3.ascending(a['sector_id'], b['sector_id']); });
+var res2 = unmatchedArray(sector_list,data2);
+
+
   var outData = join(res1,res2,"sector_id","sector_id", function(dat,col){
            return{
 			   area_code : dat.area_code,
@@ -568,52 +938,27 @@ return(outData2);
 
 
 //DATA AND IMAGE DOWNLOAD FUNCTIONS
-function dataDownload(datain, chartType){
-
-    var formatComma = d3.format(",");
-	var formatDecimalComma = d3.format(",.0f");
-    var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
-
+function dataDownload(chartType){
 	
 	var seldCTY = d3.select('#selCty option:checked').text();
 	var seldFIPS = switchFIPS(seldCTY);
-	
-if(chartType == 0){ //Count Data
 	var seldYEAR = eval(d3.select("#selYear").property('value'));
-	 if(seldCTY == "Broomfield County" && seldYEAR < 2010){
-	seldYEAR = 2010;
-	document.getElementById("selYear").value = 2010;
+	if(seldCTY == "Broomfield County" && seldYEAR < 2010){
+		seldYEAR = 2010;
+		document.getElementById("selYear").value = 2010;
     };
-	var fileName = "Jobs by Sector Counts " + seldCTY + " " + seldYEAR + ".csv";
-	
-		var datafiltered = datain.filter(function(d) {
-		 if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
-	 })
-	var dataOut = genData(datafiltered);
-	
-		dataOut.forEach(function(e){
-      if (typeof e === "object" ){
-          e["county_name"] = seldCTY;
-    }
-   });
-   
-
-   var dataOut2 = dataOut.map(item => ({
-		fips_code : item.area_code,
-		county: item.county_name,
-		NAICS : item.sector_id,
-		job_category : item.job_title,
-		wage_category : item.category,
-		year: item.population_year,
-		wage : formatDollar(item.avg_wage),
-		jobs: formatComma(Math.round(item.total_jobs))}));
+		
+if(chartType == 0){ //Count Data
+     var fileName = "Jobs by Sector Counts " + seldCTY + " " + seldYEAR + ".csv";
+     genDownloadCountPromise(seldFIPS,seldYEAR,seldCTY,fileName);
      };
 	 
 if(chartType == 1){ //Percentage Data
-    updatePCTChart(datain,1); //This 1 value will trigger the download...
+     var fileName = "Jobs by Sector Percentage " + seldCTY + " " + seldYEAR + ".csv";
+     genDownloadPCTPromise(seldFIPS,seldYEAR,seldCTY,fileName);
 }; 
 
-if(chartType == 2) {
+if(chartType == 2) {  //Difference Data
 		var begYEAR = eval(d3.select("#begYear").property('value'));
         var endYEAR = eval(d3.select("#endYear").property('value'));
 		if(seldCTY == "Broomfield County" && begYEAR < 2010){
@@ -622,72 +967,9 @@ if(chartType == 2) {
         };
         var fileName = "Jobs by Sector Differences " + seldCTY + " " + begYEAR + " to " + endYEAR + ".csv";
 
-	var dataYr1 = datain.filter(function(d) {
-                 if( d.population_year == begYEAR && d.area_code == seldFIPS) { return d; }
-             });
-    var dataYr2 = datain.filter(function(d) {
-                 if( d.population_year == endYEAR && d.area_code == seldFIPS) { return d; }
-             });
-	var outData1 = genData(dataYr1);
-	var outData2 = genData(dataYr2);  
-	var dataOut = diffData(outData1,outData2);
-	
- 	dataOut.forEach(function(e){
-      if (typeof e === "object" ){
-          e["county_name"] = seldCTY;
-    }
-   });
-
-      var dataOut2 = dataOut.map(item => ({
-		fips_code : item.area_code,
-		county: item.county_name,
-		NAICS : item.sector_id,
-		job_category : item.job_title,
-		year_1: item.population_year1,
-		jobs_year_1: formatComma(Math.round(item.total_jobs1)),
-		year_2: item.population_year2,
-		jobs_year_2: formatComma(Math.round(item.total_jobs2)),
-	    difference : Math.round(item.diffJobs)}));
-    }; 
-	
-	exportToCsv(fileName, dataOut2);
-
+genDownloadDiffPromise(seldFIPS,begYEAR,endYEAR,seldCTY,fileName);
+};
 }; //end of dataDownload
-
-
-function pctDownload(dataOut) {  //A special workaround for to download the PCT data  ugh
-
-     var formatPercent = d3.format(".1%")
-	 var formatComma = d3.format(",");
-
-	 var seldCTY = d3.select('#selCty option:checked').text();
-	 var seldFIPS = switchFIPS(seldCTY);
-	 var seldYEAR = eval(d3.select("#selYear").property('value'));
-	 if(seldCTY == "Broomfield County" && seldYEAR < 2010){
-	    seldYEAR = 2010;
-		document.getElementById("selYear").value = 2010;
-     };
-	var fileName = "Jobs by Sector Percentage " + seldCTY + " " + seldYEAR + ".csv";
-   
-   
- 
- 	dataOut.forEach(function(e){
-      if (typeof e === "object" ){
-          e["county_name"] = seldCTY;
-    }
-   });
-
-      var dataOut2 = dataOut.map(item => ({
-		fips_code : item.area_code,
-		county: item.county_name,
-		NAICS : item.sector_id,
-		job_category : item.job_title,
-		year: item.population_year,
-		jobs: formatComma(Math.round(item.total_jobs)),
-		percentage : formatPercent(item.pct_jobs)}));
-     
-	exportToCsv(fileName, dataOut2);
-}; //pctDownload
 
 
 function exportToCsv(filename, rows) {
@@ -722,7 +1004,7 @@ saveSvgAsPng(svg_node, outFileName);
 
 //CHART FUNCTIONS
 //initialChart reads information from the dropdowns, updates the title block and calls genCountChart to produce the initial static chart
-function initialChart(datain) {  
+function initialChart() {  
 
 var seldCTY = d3.select('#selCty option:checked').text();
 var seldFIPS = switchFIPS(seldCTY);
@@ -732,25 +1014,13 @@ if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 	seldYEAR = 2010;
 	document.getElementById("selYear").value = 2010;
 };
-	    //Generate bar chart
-  var datafiltered = datain.filter(function(d) {
-                 if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
-             })
-  var  outData = genData(datafiltered);
-//Reading the range data, the tabular data...
 
-d3.csv("./data/wage_summ.csv").then(function(rngdata){ 
-
-  var  tabData = rngdata.filter(function(d) {
-                     if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
-                 });
-
-  genCountChart(outData,tabData,seldCTY,seldYEAR);
-  				 });  //d3.csv
+genChartPromise(seldFIPS, seldYEAR, seldCTY);
+ 
 }; // initialChart
 
 //updateCountChart reads information from the dropdowns, updates the title block and generates the updated static chart
-function updateCountChart(datain) {
+function updateCountChart() {
 
 var seldCTY = d3.select('#selCty option:checked').text();
 var seldFIPS = switchFIPS(seldCTY);
@@ -763,26 +1033,14 @@ if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 // Removes the chart
 
 var graph = d3.select("svg").remove();
-	    //Generate bar chart
- var datafiltered = datain.filter(function(d) {
-                 if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
-             });
-  var  outData = genData(datafiltered);
-  
-  d3.csv("./data/wage_summ.csv").then(function(rngdata){ 
 
-  var  tabData = rngdata.filter(function(d) {
-                     if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
-                 });
-
-  genCountChart(outData,tabData,seldCTY,seldYEAR);
-  				 });  //d3.csv
+genChartPromise(seldFIPS, seldYEAR, seldCTY);
  
 }; //updateCountChart
 
 //updatePCTChart reads information from the dropdowns, updates the title block and generates the updated percentage chart
 //type = 1 triggers the download function
-function updatePCTChart(datain,type) {
+function updatePCTChart() {
 
 var seldCTY = d3.select('#selCty option:checked').text();
 var seldFIPS = switchFIPS(seldCTY);
@@ -793,32 +1051,14 @@ if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 	document.getElementById("selYear").value = 2010;
 };
 // Removes the chart
-if(type == 0) {
+
 var graph = d3.select("svg").remove();
-};
-	    //Generate bar chart
- var datafiltered = datain.filter(function(d) {
-                 if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
-             });
-  var  outData = genData(datafiltered);
-  
-  d3.csv("./data/wage_summ.csv").then(function(rngdata){ 
+genPCTPromise(seldFIPS,seldYEAR,seldCTY)
 
-  var  tabData = rngdata.filter(function(d) {
-                     if( d.population_year == seldYEAR && d.area_code == seldFIPS) { return d; }
-                 });
-  pctData = genPCTData(outData,tabData);
- if(type == 0){
-	 genPCTChart(pctData,tabData,seldCTY,seldYEAR);
- } else {
-	pctDownload(pctData);
- };
-  				 });  //d3.csv
- 
-}; //updatePCTChart
+ }; //updatePCTChart
 
-//updateCustomChart reads information from the dropdowns, updates the title block and generates the updated percentage chart
-function updateCustomChart(datain) {
+//updateDiffChart reads information from the dropdowns, updates the title block and generates the updated percentage chart  HERE
+function updateDiffChart() {
 
 var seldCTY = d3.select('#selCty option:checked').text();
 var seldFIPS = switchFIPS(seldCTY);
@@ -832,32 +1072,12 @@ if(seldCTY == "Broomfield County" && begYEAR < 2010){
 // Removes the chart
 
 var graph = d3.select("svg").remove();
-//Generate bar chart
 
-var dataYr1 = datain.filter(function(d) {
-                 if( d.population_year == begYEAR && d.area_code == seldFIPS) { return d; }
-             });
-var dataYr2 = datain.filter(function(d) {
-                 if( d.population_year == endYEAR && d.area_code == seldFIPS) { return d; }
-             });
-var outData1 = genData(dataYr1);
-var outData2 = genData(dataYr2);  
-var dataDiff = diffData(outData1,outData2);
+genDiffPromise(seldFIPS,begYEAR,endYEAR,seldCTY);
 
-//Calculating difference in Total Jobs
-var totalYr1 = datain.filter(function(d) {
-                 if( d.population_year == begYEAR && d.area_code == seldFIPS && d.sector_id == "00000") { return d; }
-             });
-var totalYr2 = datain.filter(function(d) {
-                 if( d.population_year == endYEAR && d.area_code == seldFIPS && d.sector_id == "00000") { return d; }
-             });
-
-var totalChng = Math.round(totalYr2[0].total_jobs) - Math.round(totalYr1[0].total_jobs);
-
-genCustomChart(dataDiff,totalChng,seldCTY,begYEAR,endYEAR);
 
  
-}; //updateCustomChart
+}; //updateDiffChart
 
 //genCountChart produces the Total Jobs chart
 function genCountChart(outdata,tabdata,CTY,YEAR){ 
@@ -945,7 +1165,7 @@ graph.append("g")
 	  
 
 //caption  s
-debugger;
+
 
 var captionStr = captionTxt(yLen + 100);
 var caption =  graph.append("g")
@@ -1133,8 +1353,8 @@ return graph.node();
  
 };  //end of genPCTChart
 
-//genCustomChart produces the Difference Chart
-function genCustomChart(outdata,totalDiff,CTY,YEAR1,YEAR2){ 
+//genDiffChart produces the Difference Chart
+function genDiffChart(outdata,totalDiff,CTY,YEAR1,YEAR2){ 
 
 
 //Comma format
@@ -1296,7 +1516,7 @@ caption.selectAll("text")
 var pos = x_axis(0);
 var tabArray = jobsHdr(outdata,0,yLen,barSpace,barHeight,totalDiff,pos, 1);
 
-if(pos > 300) {
+if(pos > 350) {
    var rectanchorX = width * .20;
 } else {
     var rectanchorX = width * .75;
@@ -1338,5 +1558,5 @@ table.selectAll("text")
 	//Error Message
 return graph.node();
  
-};  //end of genCustomChart
+};  //end of genDiffChart
  
