@@ -45,6 +45,21 @@ function showDD(yrsVal) {
 
 //DATA MANIPULATION FUNCTIONS
 
+// removeDups from https://stackoverflow.com/questions/40166958/removing-duplicate-edges-from-an-array-for-a-d3-force-directed-graph
+function removeDups(myArray){
+
+	var outArray = [];
+    myArray.sort(function(a, b){ return d3.ascending(a['job_title'], b['job_title']); })
+
+    for(var i = 1; i < myArray.length; ){
+        if(myArray[i-1].job_title != myArray[i].job_title){
+            outArray = outArray.concat(myArray[i-1]);
+            }
+		i++;
+        }
+	outArray = outArray.concat(myArray[myArray.length-1]);
+    return outArray;
+    }  
 
 
 
@@ -80,16 +95,45 @@ function extendAxis(indata){
 
 //captionTxt specifies the chart caption
 
-function captionTxt(posY) {
+function captionTxt(suppress, posY) {
 
 	//Date Format
    var formatDate = d3.timeFormat("%m/%d/%Y");
+   
    var dateStr = "Programming by the State Demography Office, Print Date: "+ formatDate(new Date);
+   if(suppress.length == 0){
+   
    var capTxt = [
                   {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: November, 2020.",  "ypos" : posY + 10},    //Update this line as the production date changes
+		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: November, 2020.",  "ypos" :posY + 10},    //Update this line as the production date changes
 				  {"captxt" : dateStr,  "ypos" : posY + 20}
 				 ];
+   } else {
+//Output suppression lists
+var supList = [];
+var N1 = "captxt";
+var N2 = "ypos";
+for(row = 0; row < suppress.length; row++){
+    var obj = {};
+	var yp = posY + 20 + eval(row * 10);
+	var ctxt = suppress[row].job_title;
+	obj[N1] = ctxt;
+	obj[N2] = yp;
+	supList.push(obj);
+};
+  
+
+   var capTxthead = [
+                  {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
+				  {"captxt" : "Supressed Job Sectors:", "ypos" : posY+ 10}]
+				  
+   var capTxttail = [
+		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: November, 2020.",  "ypos" : yp + 20},    //Update this line as the production date changes
+				  {"captxt" : dateStr,  "ypos" : yp + 30}
+				 ];
+var capTxt = capTxthead.concat(supList).concat(capTxttail);
+   };
+   
 return(capTxt);
 };
 
@@ -375,7 +419,7 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
 
 //buildData creates the basic data set
 function buildData(jData,wData){
-  
+
 	var outData = join(jData,wData,"sector_id","sector_id",function(dat,col){
 		return{
 			area_code : col.area_code,
@@ -438,8 +482,15 @@ var outdata = join(barLabels,indata,"sector_id","sector_id",function(dat,col){
 			   avg_wage : dat.avg_wage,
 			   category : dat.category
 			   };
-			   }).filter(function(d) {return d.job_title != null;})
-			     .filter(function(d) {return d.total_jobs > 0;});
+               });
+			   
+//Creating suppressed dataset
+var suppressed = outdata.filter(function(d) {return d.job_title != null;})
+			           .filter(function(d) {return d.total_jobs == 0;});
+
+//Modifying cutdata for final processing
+var outdata = outdata.filter(function(d) {return d.job_title != null;})
+			         .filter(function(d) {return d.total_jobs > 0;})
 				 
 //TYPE == 0 is for chart output, removes the total jobs row
 if(TYPE == 0){
@@ -465,7 +516,7 @@ var outdata = join(barColors,outdata,"category","category", function(dat,col){
 
 outdata.sort(function(a, b){ return d3.descending(+a['total_jobs'], +b['total_jobs']); })
 
-return outdata;
+return [outdata, suppressed];
 }; //end of genData
 
 //createAdjData calculates percentage from processed data...
@@ -541,13 +592,13 @@ Promise.all(prom).then(function(data){
 	  });
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
       var chartData2 = genData(chartData,0);
-	  genCountChart(chartData2,data[2],CTY,YEAR); //Generates a bar chart
+	  genCountChart(chartData2[0],chartData2[1],data[2],CTY,YEAR); //Generates a bar chart
      }).catch(function(error){
 		 console.log("Process Error");
 	 });
  };  //end genChartPromise
  
- //genDownloadCountPromise Creates execures promises and created charts
+ //genDownloadCountPromise Creates execures promises and downloads data
 
 function genDownloadCountPromise(FIPS,YEAR,CTY,FNAME){
 
@@ -578,30 +629,42 @@ Promise.all(prom).then(function(data){
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
       var chartData2 = genData(chartData,1);
 	  
-	  var adjJobs = createAdjData(chartData2);
+	  var adjJobs = createAdjData(chartData2[0]);
 	  
 	  var adjData = {
 		  	"fips_code" : FIPS,
 		    "county": CTY,
 		    "NAICS" : "00001",
-		    "job_category" : "Non-Suppressed Total Jobs",
+		    "job_sector" : "Non-Suppressed Total Jobs",
 		    "wage_category" : "",
 		    "year": YEAR,
 		    "wage" : "",
 		    "jobs": formatComma(Math.round(adjJobs))};
 			
-	  var dataOut = chartData2.map(item => ({
+	  var dataOut = chartData2[0].map(item => ({
 		fips_code : item.area_code,
 		county: CTY,
 		NAICS : item.sector_id,
-		job_category : item.job_title,
+		job_sector : item.job_title,
 		wage_category : item.category,
 		year: item.population_year,
 		wage : formatDollar(item.avg_wage),
 		jobs: formatComma(Math.round(item.total_jobs))}));
+if(chartData2[1].length > 0){
+		var suppressed = chartData2[1].map(item => ({
+		fips_code : item.area_code,
+		county: CTY,
+		NAICS : item.sector_id,
+		job_sector : item.job_title,
+		wage_category : item.category,
+		year: item.population_year,
+		wage : formatDollar(item.avg_wage),
+		jobs: "Suppressed"}));
 		
-		var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
-
+		var dataOut = dataOut.concat(adjData).concat(suppressed).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+} else{
+	  var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+      }
 		exportToCsv(FNAME, dataOut);
      }).catch(function(error){
 		 console.log("Process Error");
@@ -635,15 +698,18 @@ Promise.all(prom).then(function(data){
 	  });
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
       var chartData2 = genData(chartData,0);
-	  
+
+	  var chartData3 = chartData2[0];
+      var supr = chartData2[1]
 	  // Calculating the adjusted base
 
-      var adjJobs = createAdjData(chartData2);
+      var adjJobs = createAdjData(chartData3);
 	  
-	  chartData2.forEach(function(d){
+	  chartData3.forEach(function(d){
 		  d.pct_jobs = +d.total_jobs/adjJobs;
 	  });
-	  genPCTChart(chartData2,data[2],CTY,YEAR); //Generates a bar chart
+ 
+	  genPCTChart(chartData3,supr,data[2],CTY,YEAR); //Generates a bar chart
      }).catch(function(error){
 		 console.log("Process Error");
 	 });
@@ -680,36 +746,56 @@ Promise.all(prom).then(function(data){
 	 
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
       var chartData2 = genData(chartData,1);
+
+	  var chartData3 = chartData2[0];
 	  
-      var adjJobs = createAdjData(chartData2);
+      var adjJobs = createAdjData(chartData3);
 	  
 	  var adjData = {
 		  	"fips_code" : FIPS,
 		    "county": CTY,
 		    "NAICS" : "00001",
-		    "job_category" : "Non-Suppressed Total Jobs",
+		    "job_sector" : "Non-Suppressed Total Jobs",
 		    "wage_category" : "",
 		    "year": YEAR,
 		    "wage" : "",
 		    "jobs": formatComma(Math.round(adjJobs)),
 		    "percentage" : formatPercent(1)};
+			
+
 	  
-	  chartData2.forEach(function(d){
+	  chartData3.forEach(function(d){
 		  d.pct_jobs = +d.total_jobs/adjJobs;
 	  });
-	  var dataOut = chartData2.map(item => ({
+	  
+	  var dataOut = chartData3.map(item => ({
 		fips_code : item.area_code,
 		county: CTY,
 		NAICS : item.sector_id,
-		job_category : item.job_title,
+		job_sector : item.job_title,
 		wage_category : item.category,
 		year: item.population_year,
 		wage : formatDollar(item.avg_wage),
 		jobs: formatComma(Math.round(item.total_jobs)),
 		percentage : formatPercent(item.pct_jobs)}));
 		
-		var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+if(chartData2[1].length > 0){
+	var suppressed = chartData2[1].map(item => ({
+		fips_code : item.area_code,
+		county: CTY,
+		NAICS : item.sector_id,
+		job_sector : item.job_title,
+		wage_category : item.category,
+		year: item.population_year,
+		wage : formatDollar(item.avg_wage),
+		jobs: "Suppressed",
+		percentage : "Suppressed"}));
+	
 		
+		var dataOut = dataOut.concat(adjData).concat(suppressed).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+       } else {
+	    var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+       }
 		exportToCsv(FNAME, dataOut);
      }).catch(function(error){
 		 console.log("Process Error");
@@ -755,12 +841,19 @@ Promise.all(prom).then(function(data){
       var outDatabYR = genData(cDatabYR,0);
 	  var outDataeYR = genData(cDataeYR,0);
 
-      var dataDiff = diffData(outDatabYR,outDataeYR);
+      var dataDiff = diffData(outDatabYR[0],outDataeYR[0]);
+
+	  //Generate unique supressed categories
+	  var fullSup = outDatabYR[1].concat(outDataeYR[1]);
+	  var fullSup2 = fullSup.map(item => ({
+		        job_title : item.job_title
+	  }));
 	  
+	  var uniqueSup = removeDups(fullSup2);
      //Calculating difference in Total Jobs
      var totalChng = Math.round(cDataeYR[0].total_jobs) - Math.round(cDatabYR[0].total_jobs);
 
-	  genDiffChart(dataDiff,totalChng,CTY,bYEAR,eYEAR); //Generates a bar chart
+	  genDiffChart(dataDiff,uniqueSup,totalChng,CTY,bYEAR,eYEAR); //Generates a bar chart
      }).catch(function(error){
 		 console.log("Process Error");
 	 });
@@ -806,10 +899,12 @@ Promise.all(prom).then(function(data){
 	  
       var outDatabYR = genData(cDatabYR,1);
 	  var outDataeYR = genData(cDataeYR,1);
-
-      var adjJobsbYR = createAdjData(outDatabYR);
-      var adjJobseYR = createAdjData(outDataeYR)
 	  
+
+
+      var adjJobsbYR = createAdjData(outDatabYR[0]);
+      var adjJobseYR = createAdjData(outDataeYR[0])
+	  	  
 	  var adjDatabYR = {
 		  	"area_code" : FIPS,
 		    "sector_id" : "00001",
@@ -830,28 +925,30 @@ Promise.all(prom).then(function(data){
 		    "population_year": eYEAR,
 		    "total_jobs": adjJobseYR,
 			"category" : ""};;
-			
-	  var outDatabYR = outDatabYR.concat(adjDatabYR).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
-	  var outDataeYR = outDataeYR.concat(adjDataeYR).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
+debugger;			
+	  var outDatabYR2 = outDatabYR[0].concat(adjDatabYR).concat(outDatabYR[1]).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
+	  var outDataeYR2 = outDataeYR[0].concat(adjDataeYR).concat(outDataeYR[1]).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
 
-      var dataDiff = diffData(outDatabYR,outDataeYR);
-
+      var dataDiff = diffData(outDatabYR2,outDataeYR2);
+console.log(dataDiff);
+var sup = "Suppressed";
 	  
 	  var dataOut = dataDiff.map(item => ({
 		fips_code : item.area_code,
 		county: item.county_name,
 		NAICS : item.sector_id,
-		job_category : item.job_title,
+		job_sector : item.job_title,
 		year_1: item.population_year1,
-		jobs_year_1: Math.round(item.total_jobs1),
+		jobs_year_1: (item.total_jobs1 == 0) ? sup : Math.round(item.total_jobs1),
 		wage_category_year_1 : item.category1,
 		year_2: item.population_year2,
-		jobs_year_2: Math.round(item.total_jobs2),
+		jobs_year_2: (item.total_jobs2 == 0) ? sup : Math.round(item.total_jobs2),
 		wage_category_year_2 : item.category2,
-	    difference : Math.round(item.diffJobs)}));
+	    difference : (item.diffJobs == 0) ? sup : Math.round(item.diffJobs)
+		}));
 		
-		var dataOut = dataOut.sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
-		
+
+	 var dataOut = dataOut.sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
 
 		exportToCsv(FNAME, dataOut);
      }).catch(function(error){
@@ -1080,7 +1177,7 @@ genDiffPromise(seldFIPS,begYEAR,endYEAR,seldCTY);
 }; //updateDiffChart
 
 //genCountChart produces the Total Jobs chart
-function genCountChart(outdata,tabdata,CTY,YEAR){ 
+function genCountChart(outdata,suppressed,tabdata,CTY,YEAR){ 
 
 //Comma format
 var formatComma = d3.format(",");
@@ -1167,7 +1264,7 @@ graph.append("g")
 //caption  s
 
 
-var captionStr = captionTxt(yLen + 100);
+var captionStr = captionTxt(suppressed, yLen + 100);
 var caption =  graph.append("g")
 	     .attr("class","tabobj");
 caption.selectAll("text")
@@ -1218,7 +1315,7 @@ return graph.node();
 };  //end of genCountChart
 
 //genPCTChart produces the Total Jobs chart
-function genPCTChart(outdata,tabdata,CTY,YEAR){ 
+function genPCTChart(outdata,suppressed,tabdata,CTY,YEAR){ 
 
 //Comma format
 var formatComma = d3.format(",");
@@ -1304,7 +1401,7 @@ graph.append("g")
 	  
 
 //caption
-var captionStr = captionTxt(yLen + 100);
+var captionStr = captionTxt(suppressed,yLen + 100);
 var caption =  graph.append("g")
 	     .attr("class","tabobj");
 caption.selectAll("text")
@@ -1354,7 +1451,7 @@ return graph.node();
 };  //end of genPCTChart
 
 //genDiffChart produces the Difference Chart
-function genDiffChart(outdata,totalDiff,CTY,YEAR1,YEAR2){ 
+function genDiffChart(outdata,suppressed,totalDiff,CTY,YEAR1,YEAR2){ 
 
 
 //Comma format
@@ -1498,7 +1595,7 @@ graph.append("text")
 		.style("font", "9px sans-serif");
 
 //caption
-var captionStr = captionTxt(yLen + 100);
+var captionStr = captionTxt(suppressed,yLen + 100);
 var caption =  graph.append("g")
 	     .attr("class","tabobj");
 caption.selectAll("text")
