@@ -925,12 +925,12 @@ Promise.all(prom).then(function(data){
 		    "population_year": eYEAR,
 		    "total_jobs": adjJobseYR,
 			"category" : ""};;
-debugger;			
+		
 	  var outDatabYR2 = outDatabYR[0].concat(adjDatabYR).concat(outDatabYR[1]).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
 	  var outDataeYR2 = outDataeYR[0].concat(adjDataeYR).concat(outDataeYR[1]).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
 
       var dataDiff = diffData(outDatabYR2,outDataeYR2);
-console.log(dataDiff);
+
 var sup = "Suppressed";
 	  
 	  var dataOut = dataDiff.map(item => ({
@@ -944,7 +944,7 @@ var sup = "Suppressed";
 		year_2: item.population_year2,
 		jobs_year_2: (item.total_jobs2 == 0) ? sup : Math.round(item.total_jobs2),
 		wage_category_year_2 : item.category2,
-	    difference : (item.diffJobs == 0) ? sup : Math.round(item.diffJobs)
+	    difference : (item.diffJobs == 0 || item.total_jobs1 == 0 || item.total_jobs2 == 0) ? sup : Math.round(item.diffJobs)
 		}));
 		
 
