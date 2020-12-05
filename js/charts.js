@@ -842,6 +842,7 @@ Promise.all(prom).then(function(data){
 	  var outDataeYR = genData(cDataeYR,0);
 
       var dataDiff = diffData(outDatabYR[0],outDataeYR[0]);
+	  var dataDiff = dataDiff.filter(function(d){return ((d.total_jobs1 != 0) && (d.total_jobs2 != 0))});
 
 	  //Generate unique supressed categories
 	  var fullSup = outDatabYR[1].concat(outDataeYR[1]);
