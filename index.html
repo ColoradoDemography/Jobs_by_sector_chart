@@ -122,24 +122,33 @@ d3.select("#selYear")
 	.attr('value', function(d) {return d;}) 
 	.text(function(d) {return d;})
 	.property("selected", lastYr);
-	
 
+//Dimensions of Charts
+var chartDim = [{
+            "margin" : [{top: 20, right: 210, bottom: 40, left: 40}],
+            "width" : 900,
+			"height" : 600,
+			"barHeight" : 8,
+			"barSpace" : 4,
+			"axisShift" : 130,
+			"viewBx" : [{xVal : 0, yVal : 0, vHeight : 1200, vWidth : 1200}]
+			}];
 
 //The inital chart
 var chartType = 0;
   hideDD();
-  initialChart();
+  initialChart(chartDim);
 
 //The onchange events:  Change of County
 d3.select("#selCty").on("change", function(d,i) {
      if(chartType == 0)  {
-         updateCountChart();
+         updateCountChart(chartDim);
 		 };
 	  if(chartType == 1) {
-	    updatePCTChart(0);
+	    updatePCTChart(chartDim);
 		};
 	  if(chartType == 2) { //This is for the Diff year chart...
-	    updateDiffChart();
+	    updateDiffChart(chartDim);
 	  };
 	});
 
@@ -147,10 +156,10 @@ d3.select("#selCty").on("change", function(d,i) {
 d3.select("#selYear").on("change", function(d,i) {
 
       if(chartType == 0)  {
-         updateCountChart();
+         updateCountChart(chartDim);
 		 };
 	  if(chartType == 1) {
-	    updatePCTChart(0);
+	    updatePCTChart(chartDim);
 		};
 	});
 
@@ -158,7 +167,7 @@ d3.select("#selYear").on("change", function(d,i) {
 //Change of beginning year -- triggers comparison chart...
 d3.select("#begYear").on("change", function(d,i) {
    if(chartType == 2) {
-       updateDiffChart();
+       updateDiffChart(chartDim);
 	};
  });
  
@@ -166,7 +175,7 @@ d3.select("#begYear").on("change", function(d,i) {
 //Change of end year -- triggers comparison chart...
 d3.select("#endYear").on("change", function(d,i) {
    if(chartType == 2) {
-       updateDiffChart();
+       updateDiffChart(chartDim);
 	};
  });
  
@@ -175,13 +184,13 @@ d3.select("#endYear").on("change", function(d,i) {
 d3.select("#btnCount").on("click", function(event) {
        chartType = 0;
        hideDD()
-       updateCountChart();
+       updateCountChart(chartDim);
       });
 
 d3.select("#btnPercent").on("click", function(event) {
        chartType = 1;
 	   hideDD()
-       updatePCTChart();
+       updatePCTChart(chartDim);
       });
 
 d3.select("#btnComp").on("click", function(event) {
@@ -213,7 +222,7 @@ d3.select("#btnData").on("click", function(event) {
          };
 
 	
-	imageDownload(fileNamePNG);
+	imageDownload(fileNamePNG,chartDim,chartType);
  });  //btnSave
 
 
