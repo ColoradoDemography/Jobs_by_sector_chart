@@ -105,8 +105,8 @@ function captionTxt(suppress, posY) {
    
    var capTxt = [
                   {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: November, 2020.",  "ypos" :posY + 10},    //Update this line as the production date changes
-				  {"captxt" : dateStr,  "ypos" : posY + 20}
+		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: November, 2020.",  "ypos" :posY + 14},    //Update this line as the production date changes
+				  {"captxt" : dateStr,  "ypos" : posY + 28}
 				 ];
    } else {
 //Output suppression lists
@@ -1096,7 +1096,7 @@ function imageDownload(outFileName,dimChart,chartType) {
 
 var svg_node = d3.select("svg").node();
 
-svg_node.setAttribute("viewBox", "0 0 900 450")
+svg_node.setAttribute("viewBox", "0 0 950 450")
 
 saveSvgAsPng(svg_node, outFileName);
 
@@ -1227,7 +1227,7 @@ graph.append("text")
         .attr("x", (dimChart[0].width / 2))             
         .attr("y", dimChart[0].margin[0].top + 10 )
         .attr("text-anchor", "middle")  
-        .style("font", "16px sans-serif") 
+        .style("font", "16pt sans-serif") 
         .style("text-decoration", "underline")  
         .text(titStr);
 
@@ -1249,7 +1249,7 @@ bar.append("text")
        .attr("dy", ".35em")
        .text(function(d) { return formatComma(Math.round(d.total_jobs)); })
 	   .style("fill","black")
-	   .style("font", "9px sans-serif");
+	   .style("font", "9pt sans-serif");
 
 //X- axis
 graph.append("g")
@@ -1278,7 +1278,7 @@ caption.selectAll("text")
 	    .attr("x", 165)             
         .attr("y", function(d) {return d.ypos})
         .attr("text-anchor", "right")  
-        .style("font", "9px sans-serif");
+        .style("font", "9pt sans-serif");
 
 //Table
 
@@ -1298,7 +1298,7 @@ table.selectAll("rect")
     .data(tabArray)
 	.enter()
 	.append("rect")
-    .attr("x", function(d) {return rectanchorX;})
+    .attr("x", function(d) {return rectanchorX - 5;})
 	.attr("y", function(d) {return d.ypos;})
     .attr("width",  dimChart[0].barHeight)
     .attr("height", dimChart[0].barHeight)
@@ -1308,10 +1308,10 @@ table.selectAll("text")
     .data(tabArray)
 	.enter()
 	.append("text")
-    .attr("x", function(d) {return rectanchorX + 10;})
+    .attr("x", function(d) {return rectanchorX + 5;})
 	.attr("y", function(d) {return d.ypos + 6;})
     .text( function(d) { return d.text;})
-	.style("font", "9px sans-serif");
+	.style("font", "9pt sans-serif");
 	
 return graph.node();
  
@@ -1358,29 +1358,29 @@ graph.append("text")
         .attr("x", (dimChart[0].width / 2))             
         .attr("y", dimChart[0].margin[0].top + 10 )
         .attr("text-anchor", "middle")  
-        .style("font", "16px sans-serif") 
+        .style("font", "16pt sans-serif") 
         .style("text-decoration", "underline")  
         .text(titStr);
 
-var bar = graph.selectAll("g")
+var bars = graph.selectAll("g")
                   .data(outdata)
                   .enter()
                   .append("g")
                   .attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},50)`);
 
-bar.append("rect")
+bars.append("rect")
        .attr("y", function(d) { return y_axis(d.job_title); })
        .attr("width", function(d) { return x_axis(+d.pct_jobs); })
        .attr("height", dimChart[0].barHeight)
 	   .style("fill", function(d) { return d.bar_color});
 
-bar.append("text")
+bars.append("text")
        .attr("x", function(d) { return x_axis(+d.pct_jobs); })
        .attr("y", function(d,i) {return y_axis(d.job_title) + 5; })
        .attr("dy", ".35em")
        .text(function(d) { return formatPercent(+d.pct_jobs); })
 	   .style("fill","black")
-	   .style("font", "9px sans-serif");
+	   .style("font", "9pt sans-serif");
 
 //X- axis
 graph.append("g")
@@ -1407,7 +1407,7 @@ caption.selectAll("text")
 	    .attr("x", 165)             
         .attr("y", function(d) {return d.ypos})
         .attr("text-anchor", "right")  
-        .style("font", "9px sans-serif");
+        .style("font", "9pt sans-serif");
 
 //Table
 var pos = x_axis(0);
@@ -1426,7 +1426,7 @@ table.selectAll("rect")
     .data(tabArray)
 	.enter()
 	.append("rect")
-    .attr("x", function(d) {return rectanchorX;})
+    .attr("x", function(d) {return rectanchorX - 5;})
 	.attr("y", function(d) {return d.ypos;})
     .attr("width",  dimChart[0].barHeight)
     .attr("height", dimChart[0].barHeight)
@@ -1436,10 +1436,10 @@ table.selectAll("text")
     .data(tabArray)
 	.enter()
 	.append("text")
-    .attr("x", function(d) {return rectanchorX + 10;})
+    .attr("x", function(d) {return rectanchorX + 5;})
 	.attr("y", function(d) {return d.ypos + 6;})
     .text( function(d) { return d.text;})
-	.style("font", "9px sans-serif");
+	.style("font", "9pt sans-serif");
 	
 return graph.node();
  
@@ -1492,7 +1492,7 @@ if(YEAR1 == YEAR2) {
 			.attr("x", (dimChart[0].width / 2))             
 			.attr("y", dimChart[0].margin[0].top + 10 )
 			.attr("text-anchor", "middle")  
-			.style("font", "16px sans-serif") 
+			.style("font", "16pt sans-serif") 
 			.style("text-decoration", "underline")  
 			.text(titStr);
 } else if((+YEAR1 > +YEAR2) && (+YEAR2 != 2001)) {
@@ -1501,7 +1501,7 @@ if(YEAR1 == YEAR2) {
 			.attr("x", (dimChart[0].width / 2))             
 			.attr("y", dimChart[0].margin[0].top + 10 )
 			.attr("text-anchor", "middle")  
-			.style("font", "16px sans-serif") 
+			.style("font", "16pt sans-serif") 
 			.style("text-decoration", "underline")  
 			.text(titStr);
 } else if(+YEAR2 > 2001) {
@@ -1511,7 +1511,7 @@ graph.append("text")
         .attr("x", (dimChart[0].width / 2))             
         .attr("y", dimChart[0].margin[0].top + 10 )
         .attr("text-anchor", "middle")  
-        .style("font", "16px sans-serif") 
+        .style("font", "16pt sans-serif") 
         .style("text-decoration", "underline")  
         .text(titStr);
 //Y Axis
@@ -1558,7 +1558,7 @@ graph.append("text")
        .attr("dy", ".35em")
        .text(function(d) { return formatComma(Math.round(d.diffJobs)); })
 	   .style("fill","black")
-	   .style("font", "9px sans-serif");
+	   .style("font", "9pt sans-serif");
 	  
 	  //Axis Labels
       var labels = graph.append("g")
@@ -1580,7 +1580,7 @@ graph.append("text")
       	})
       	.text(function(d) { return d.job_title; })
       	.style("fill", "black")
-		.style("font", "9px sans-serif");
+		.style("font", "10pt sans-serif");
 
 //caption
 var captionStr = captionTxt(suppressed,yLen + 100);
@@ -1594,7 +1594,7 @@ caption.selectAll("text")
 	    .attr("x", 165)             
         .attr("y", function(d) {return d.ypos})
         .attr("text-anchor", "right")  
-        .style("font", "9px sans-serif");
+        .style("font", "9pt sans-serif");
 
 //Table, not really...
 
@@ -1615,7 +1615,7 @@ table.selectAll("rect")
     .data(tabArray)
 	.enter()
 	.append("rect")
-    .attr("x", function(d) {return rectanchorX;})
+    .attr("x", function(d) {return rectanchorX - 5;})
 	.attr("y", function(d) {return d.ypos;})
     .attr("width",  dimChart[0].barHeight)
     .attr("height", dimChart[0].barHeight)
@@ -1625,10 +1625,10 @@ table.selectAll("text")
     .data(tabArray)
 	.enter()
 	.append("text")
-    .attr("x", function(d) {return rectanchorX + 10;})
+    .attr("x", function(d) {return rectanchorX + 5;})
 	.attr("y", function(d) {return d.ypos + 6;})
     .text( function(d) { return d.text;})
-	.style("font", "9px sans-serif");
+	.style("font", "9pt sans-serif");
 	
 } else {
 	var titStr = "Please adjust the 'End Year' value.";
@@ -1636,7 +1636,7 @@ table.selectAll("text")
 			.attr("x", (dimChart[0].width / 2))             
 			.attr("y", dimChart[0].margin[0].top + 10 )
 			.attr("text-anchor", "middle")  
-			.style("font", "16px sans-serif") 
+			.style("font", "16pt sans-serif") 
 			.style("text-decoration", "underline")  
 			.text(titStr);
 }
