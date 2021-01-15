@@ -1103,9 +1103,9 @@ saveSvgAsPng(svg_node, outFileName);
 if(chartType == 0) {
 	updateCountChart(dimChart);
 } else if(chartType == 1) {
-	updateDiffChart(dimChart);
-} else {
 	updatePCTChart(dimChart);
+} else {
+	updateDiffChart(dimChart);
 };
 }; //End of imageDownload
 
