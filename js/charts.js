@@ -567,7 +567,7 @@ return elemOut;
 //CHART DATA FUNCTIONS
 //genChartPromise Creates execures promises and created charts
 
-function genChartPromise(FIPS,YEAR,CTY){
+function genChartPromise(FIPS,YEAR,CTY, dimChart){
 
 //Formats
 var zero3 = d3.format("03d");
@@ -592,7 +592,7 @@ Promise.all(prom).then(function(data){
 	  });
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
       var chartData2 = genData(chartData,0);
-	  genCountChart(chartData2[0],chartData2[1],data[2],CTY,YEAR); //Generates a bar chart
+	  genCountChart(chartData2[0],chartData2[1],data[2],CTY,YEAR,dimChart); //Generates a bar chart
      }).catch(function(error){
 		 console.log("Process Error");
 	 });
@@ -675,7 +675,7 @@ if(chartData2[1].length > 0){
  
  //genPCTPromise Creates execures promises and created charts
 
-function genPCTPromise(FIPS,YEAR,CTY){
+function genPCTPromise(FIPS,YEAR,CTY,dimChart){
 //Formats
 var zero3 = d3.format("03d");
 var zero5 = d3.format("05d");
@@ -709,7 +709,7 @@ Promise.all(prom).then(function(data){
 		  d.pct_jobs = +d.total_jobs/adjJobs;
 	  });
  
-	  genPCTChart(chartData3,supr,data[2],CTY,YEAR); //Generates a bar chart
+	  genPCTChart(chartData3,supr,data[2],CTY,YEAR,dimChart); //Generates a bar chart
      }).catch(function(error){
 		 console.log("Process Error");
 	 });
@@ -805,7 +805,7 @@ if(chartData2[1].length > 0){
 
 //genDiffPromise Creates execures promises and created charts
 
-function genDiffPromise(FIPS,bYEAR,eYEAR,CTY){
+function genDiffPromise(FIPS,bYEAR,eYEAR,CTY,dimChart){
 
 //Formats
 var zero3 = d3.format("03d");
@@ -854,7 +854,7 @@ Promise.all(prom).then(function(data){
      //Calculating difference in Total Jobs
      var totalChng = Math.round(cDataeYR[0].total_jobs) - Math.round(cDatabYR[0].total_jobs);
 
-	  genDiffChart(dataDiff,uniqueSup,totalChng,CTY,bYEAR,eYEAR); //Generates a bar chart
+	  genDiffChart(dataDiff,uniqueSup,totalChng,CTY,bYEAR,eYEAR,dimChart); //Generates a bar chart
      }).catch(function(error){
 		 console.log("Process Error");
 	 });
@@ -1092,17 +1092,27 @@ function exportToCsv(filename, rows) {
     };
 
 
-function imageDownload(outFileName) {
+function imageDownload(outFileName,dimChart,chartType) {
+
 var svg_node = d3.select("svg").node();
+
+svg_node.setAttribute("viewBox", "0 0 900 450")
 
 saveSvgAsPng(svg_node, outFileName);
 
+if(chartType == 0) {
+	updateCountChart(dimChart);
+} else if(chartType == 1) {
+	updateDiffChart(dimChart);
+} else {
+	updatePCTChart(dimChart);
+};
 }; //End of imageDownload
 
 
 //CHART FUNCTIONS
 //initialChart reads information from the dropdowns, updates the title block and calls genCountChart to produce the initial static chart
-function initialChart() {  
+function initialChart(dimChart) {  
 
 var seldCTY = d3.select('#selCty option:checked').text();
 var seldFIPS = switchFIPS(seldCTY);
@@ -1113,12 +1123,12 @@ if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 	document.getElementById("selYear").value = 2010;
 };
 
-genChartPromise(seldFIPS, seldYEAR, seldCTY);
+genChartPromise(seldFIPS, seldYEAR, seldCTY, dimChart);
  
 }; // initialChart
 
 //updateCountChart reads information from the dropdowns, updates the title block and generates the updated static chart
-function updateCountChart() {
+function updateCountChart(dimChart) {
 
 var seldCTY = d3.select('#selCty option:checked').text();
 var seldFIPS = switchFIPS(seldCTY);
@@ -1132,13 +1142,13 @@ if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 
 var graph = d3.select("svg").remove();
 
-genChartPromise(seldFIPS, seldYEAR, seldCTY);
+genChartPromise(seldFIPS, seldYEAR, seldCTY, dimChart);
  
 }; //updateCountChart
 
 //updatePCTChart reads information from the dropdowns, updates the title block and generates the updated percentage chart
-//type = 1 triggers the download function
-function updatePCTChart() {
+
+function updatePCTChart(dimChart) {
 
 var seldCTY = d3.select('#selCty option:checked').text();
 var seldFIPS = switchFIPS(seldCTY);
@@ -1151,12 +1161,12 @@ if(seldCTY == "Broomfield County" && seldYEAR < 2010){
 // Removes the chart
 
 var graph = d3.select("svg").remove();
-genPCTPromise(seldFIPS,seldYEAR,seldCTY)
+genPCTPromise(seldFIPS,seldYEAR,seldCTY,dimChart)
 
  }; //updatePCTChart
 
 //updateDiffChart reads information from the dropdowns, updates the title block and generates the updated percentage chart  HERE
-function updateDiffChart() {
+function updateDiffChart(dimChart) {
 
 var seldCTY = d3.select('#selCty option:checked').text();
 var seldFIPS = switchFIPS(seldCTY);
@@ -1171,14 +1181,14 @@ if(seldCTY == "Broomfield County" && begYEAR < 2010){
 
 var graph = d3.select("svg").remove();
 
-genDiffPromise(seldFIPS,begYEAR,endYEAR,seldCTY);
+genDiffPromise(seldFIPS,begYEAR,endYEAR,seldCTY,dimChart);
 
 
  
 }; //updateDiffChart
 
 //genCountChart produces the Total Jobs chart
-function genCountChart(outdata,suppressed,tabdata,CTY,YEAR){ 
+function genCountChart(outdata,suppressed,tabdata,CTY,YEAR,dimChart){ 
 
 //Comma format
 var formatComma = d3.format(",");
@@ -1189,23 +1199,15 @@ var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
 var formatDate = d3.timeFormat("%m/%d/%Y");
 //Percentage Format
 var formatPercent = d3.format(".1%")
-//defining the SVG  
- margin = ({top: 20, right: 210, bottom: 40, left: 40})
+//defining the SVG, using the values from dimChart  
 
-    var width = 900,
-	height = 600,
-    barHeight = 8,
-	barSpace = 4,
-	axisShift = 130;
-	
-
-var yLen = (barHeight + barSpace) * (outdata.length);
+var yLen = (dimChart[0].barHeight + dimChart[0].barSpace) * (outdata.length);
 
 var maxVal = d3.max(outdata, function(d) { return +d.total_jobs;} );
 
 var x_axis = d3.scaleLinear()
                    .domain([0, maxVal])
-				   .range([0,(width - margin.right)]);
+				   .range([0,(dimChart[0].width - dimChart[0].margin[0].right)]);
 
 var y_axis = d3.scaleBand()
      .domain(outdata.map(d => d.job_title))
@@ -1217,13 +1219,13 @@ var y_axis = d3.scaleBand()
   var graph = d3.select("#chart")
 	     .append("svg")
 		 .attr("preserveAspectRatio", "xMinYMin meet")
-         .attr("viewBox", [0, 0, width, height]);
+         .attr("viewBox", [dimChart[0].viewBx[0].xVal, dimChart[0].viewBx[0].yVal, dimChart[0].viewBx[0].vWidth, dimChart[0].viewBx[0].vHeight]);  //Sets Viewbox
 
 //Title
 var titStr = "Jobs by Sector: " + CTY +", "+ YEAR;
 graph.append("text")
-        .attr("x", (width / 2))             
-        .attr("y", margin.top + 10 )
+        .attr("x", (dimChart[0].width / 2))             
+        .attr("y", dimChart[0].margin[0].top + 10 )
         .attr("text-anchor", "middle")  
         .style("font", "16px sans-serif") 
         .style("text-decoration", "underline")  
@@ -1233,12 +1235,12 @@ var bar = graph.selectAll("g")
                   .data(outdata)
                   .enter()
                   .append("g")
-                  .attr("transform", `translate(${margin.left + axisShift},50)`);
+                  .attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},50)`);
 
 bar.append("rect")
        .attr("y", function(d) { return y_axis(d.job_title); })
        .attr("width", function(d) { return x_axis(+d.total_jobs); })
-       .attr("height", barHeight)
+       .attr("height", dimChart[0].barHeight)
 	   .style("fill", function(d) { return d.bar_color});
 
 bar.append("text")
@@ -1252,13 +1254,13 @@ bar.append("text")
 //X- axis
 graph.append("g")
       .attr("class","X-Axis")
-      .attr("transform", `translate(${margin.left + axisShift},${yLen + 50})`)
+      .attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},${yLen + 50})`)
       .call(d3.axisBottom(x_axis).tickFormat(formatComma));
 
 //Y-axis
 graph.append("g")
       .attr("class","Y-Axis")
-      .attr("transform", `translate(${margin.left + axisShift},50)`)
+      .attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},50)`)
       .call(d3.axisLeft(y_axis));
 	  
 
@@ -1267,7 +1269,7 @@ graph.append("g")
 
 var captionStr = captionTxt(suppressed, yLen + 100);
 var caption =  graph.append("g")
-	     .attr("class","tabobj");
+	     .attr("class","captionobj");
 caption.selectAll("text")
         .data(captionStr)
 		.enter()
@@ -1281,12 +1283,12 @@ caption.selectAll("text")
 //Table
 
 var pos = x_axis(0);
-var tabArray = jobsHdr(tabdata,YEAR,yLen,barSpace,barHeight,0,pos, 0);
+var tabArray = jobsHdr(tabdata,YEAR,yLen,dimChart[0].barSpace,dimChart[0].barHeight,0,pos, 0);
 
 if(pos > 400) {
-   var rectanchorX = width * .20;
+   var rectanchorX = dimChart[0].width * .20;
 } else {
-    var rectanchorX = width * .80;
+    var rectanchorX = dimChart[0].width * .80;
 }; 
 
 var table =  graph.append("g")
@@ -1298,8 +1300,8 @@ table.selectAll("rect")
 	.append("rect")
     .attr("x", function(d) {return rectanchorX;})
 	.attr("y", function(d) {return d.ypos;})
-    .attr("width",  barHeight)
-    .attr("height", barHeight)
+    .attr("width",  dimChart[0].barHeight)
+    .attr("height", dimChart[0].barHeight)
     .attr("fill", function(d) { return d.color;});
 
 table.selectAll("text")
@@ -1316,7 +1318,7 @@ return graph.node();
 };  //end of genCountChart
 
 //genPCTChart produces the Total Jobs chart
-function genPCTChart(outdata,suppressed,tabdata,CTY,YEAR){ 
+function genPCTChart(outdata,suppressed,tabdata,CTY,YEAR,dimChart){ 
 
 //Comma format
 var formatComma = d3.format(",");
@@ -1327,23 +1329,15 @@ var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
 var formatDate = d3.timeFormat("%m/%d/%Y");
 //Percentage Format
 var formatPercent = d3.format(".1%")
-//defining the SVG  
- margin = ({top: 20, right: 210, bottom: 40, left: 40})
+//defining the SVG  Using the values of dimChart  
 
-    var width = 900,
-	height = 600,
-    barHeight = 8,
-	barSpace = 4,
-	axisShift = 130;
-	
-
-var yLen = (barHeight + barSpace) * (outdata.length);
+var yLen = (dimChart[0].barHeight + dimChart[0].barSpace) * (outdata.length);
 
 var maxVal = d3.max(outdata, function(d) { return +d.pct_jobs;} );
 
 var x_axis = d3.scaleLinear()
                    .domain([0,maxVal])
-				   .range([0,(width - margin.right)]);
+				   .range([0,(dimChart[0].width - dimChart[0].margin[0].right)]);
 
 
 var y_axis = d3.scaleBand()
@@ -1356,13 +1350,13 @@ var y_axis = d3.scaleBand()
   var graph = d3.select("#chart")
 	     .append("svg")
 		 .attr("preserveAspectRatio", "xMinYMin meet")
-         .attr("viewBox", [0, 0, width, height]);
+         .attr("viewBox", [dimChart[0].viewBx[0].xVal, dimChart[0].viewBx[0].yVal, dimChart[0].viewBx[0].vWidth, dimChart[0].viewBx[0].vHeight]);
 
 //Title
 var titStr = "Jobs by Sector, Percentage: " + CTY +", "+ YEAR;
 graph.append("text")
-        .attr("x", (width / 2))             
-        .attr("y", margin.top + 10 )
+        .attr("x", (dimChart[0].width / 2))             
+        .attr("y", dimChart[0].margin[0].top + 10 )
         .attr("text-anchor", "middle")  
         .style("font", "16px sans-serif") 
         .style("text-decoration", "underline")  
@@ -1372,12 +1366,12 @@ var bar = graph.selectAll("g")
                   .data(outdata)
                   .enter()
                   .append("g")
-                  .attr("transform", `translate(${margin.left + axisShift},50)`);
+                  .attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},50)`);
 
 bar.append("rect")
        .attr("y", function(d) { return y_axis(d.job_title); })
        .attr("width", function(d) { return x_axis(+d.pct_jobs); })
-       .attr("height", barHeight)
+       .attr("height", dimChart[0].barHeight)
 	   .style("fill", function(d) { return d.bar_color});
 
 bar.append("text")
@@ -1391,20 +1385,20 @@ bar.append("text")
 //X- axis
 graph.append("g")
       .attr("class","X-Axis")
-      .attr("transform", `translate(${margin.left + axisShift},${yLen + 50})`)
+      .attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},${yLen + 50})`)
       .call(d3.axisBottom(x_axis).tickFormat(formatPercent));
 
 //Y-axis
 graph.append("g")
       .attr("class","Y-Axis")
-      .attr("transform", `translate(${margin.left + axisShift},50)`)
+      .attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},50)`)
       .call(d3.axisLeft(y_axis));
 	  
 
 //caption
 var captionStr = captionTxt(suppressed,yLen + 100);
 var caption =  graph.append("g")
-	     .attr("class","tabobj");
+	     .attr("class","captionobj");
 caption.selectAll("text")
         .data(captionStr)
 		.enter()
@@ -1417,12 +1411,12 @@ caption.selectAll("text")
 
 //Table
 var pos = x_axis(0);
-var tabArray = jobsHdr(tabdata,YEAR,yLen,barSpace,barHeight,0,pos, 0);
+var tabArray = jobsHdr(tabdata,YEAR,yLen,dimChart[0].barSpace,dimChart[0].barHeight,0,pos, 0);
 
 if(pos > 400) {
-   var rectanchorX = width * .20;
+   var rectanchorX = dimChart[0].width * .20;
 } else {
-    var rectanchorX = width * .75;
+    var rectanchorX = dimChart[0].width * .75;
 }; 
 
 var table =  graph.append("g")
@@ -1434,8 +1428,8 @@ table.selectAll("rect")
 	.append("rect")
     .attr("x", function(d) {return rectanchorX;})
 	.attr("y", function(d) {return d.ypos;})
-    .attr("width",  barHeight)
-    .attr("height", barHeight)
+    .attr("width",  dimChart[0].barHeight)
+    .attr("height", dimChart[0].barHeight)
     .attr("fill", function(d) { return d.color;});
 
 table.selectAll("text")
@@ -1452,7 +1446,7 @@ return graph.node();
 };  //end of genPCTChart
 
 //genDiffChart produces the Difference Chart
-function genDiffChart(outdata,suppressed,totalDiff,CTY,YEAR1,YEAR2){ 
+function genDiffChart(outdata,suppressed,totalDiff,CTY,YEAR1,YEAR2,dimChart){ 
 
 
 //Comma format
@@ -1465,27 +1459,20 @@ var formatDate = d3.timeFormat("%m/%d/%Y");
 //Percentage Format
 var formatPercent = d3.format(".1%")
 //defining the SVG  
- margin = ({top: 20, right: 210, bottom: 40, left: 40})
-
-    var width = 900,
-	height = 600,
-    barHeight = 8,
-	barSpace = 4,
-	axisShift = 130;
-	
+ 
 
 var cfg = {
       labelMargin: 5,
       xAxisMargin: 10,
       legendRightMargin: 0
     }
-var yLen = (barHeight + barSpace) * (outdata.length);
+var yLen = (dimChart[0].barHeight + dimChart[0].barSpace) * (outdata.length);
 
 var scaleVal = extendAxis(d3.extent(outdata, function(d) {return d.diffJobs;}));
 
 var x_axis = d3.scaleLinear()
                    .domain([scaleVal[0], scaleVal[1]])
-				   .range([0,(width - margin.right)]);
+				   .range([0,(dimChart[0].width - dimChart[0].margin[0].right)]);
 
 var y_axis = d3.scaleBand()
      .domain(outdata.map(d => d.job_title))
@@ -1497,13 +1484,13 @@ var y_axis = d3.scaleBand()
 var graph = d3.select("#chart")
 	     .append("svg")
 		 .attr("preserveAspectRatio", "xMinYMin meet")
-         .attr("viewBox", [0, 0, width, height]);
+         .attr("viewBox", [dimChart[0].viewBx[0].xVal, dimChart[0].viewBx[0].yVal, dimChart[0].viewBx[0].vWidth, dimChart[0].viewBx[0].vHeight]);  //This sets the viewBox to the size of the SVG
 		 
 if(YEAR1 == YEAR2) {
 	var titStr = "The selected year values are equal.  Please adjust the 'Start Year' or 'End Year' values.";
 	graph.append("text")
-			.attr("x", (width / 2))             
-			.attr("y", margin.top + 10 )
+			.attr("x", (dimChart[0].width / 2))             
+			.attr("y", dimChart[0].margin[0].top + 10 )
 			.attr("text-anchor", "middle")  
 			.style("font", "16px sans-serif") 
 			.style("text-decoration", "underline")  
@@ -1511,8 +1498,8 @@ if(YEAR1 == YEAR2) {
 } else if((+YEAR1 > +YEAR2) && (+YEAR2 != 2001)) {
 	var titStr = "The 'Start Year' value is greater than the 'End Year' value.  Please adjust the 'Start Year' or 'End Year' values.";
 	graph.append("text")
-			.attr("x", (width / 2))             
-			.attr("y", margin.top + 10 )
+			.attr("x", (dimChart[0].width / 2))             
+			.attr("y", dimChart[0].margin[0].top + 10 )
 			.attr("text-anchor", "middle")  
 			.style("font", "16px sans-serif") 
 			.style("text-decoration", "underline")  
@@ -1521,8 +1508,8 @@ if(YEAR1 == YEAR2) {
 //Title
 var titStr = "Employment Change by Sector. " + CTY +" "+ YEAR1 +" to "+ YEAR2;
 graph.append("text")
-        .attr("x", (width / 2))             
-        .attr("y", margin.top + 10 )
+        .attr("x", (dimChart[0].width / 2))             
+        .attr("y", dimChart[0].margin[0].top + 10 )
         .attr("text-anchor", "middle")  
         .style("font", "16px sans-serif") 
         .style("text-decoration", "underline")  
@@ -1533,18 +1520,18 @@ graph.append("text")
       	.attr("transform", "translate(" + x_axis(0) + ",0)")
       	.append("line")
           .attr("y1", 0)
-          .attr("y2", height);
+          .attr("y2", dimChart[0].height);
 
 //X Axis
     graph.append("g")
       .attr("class","X-Axis")
-      .attr("transform", `translate(${margin.left + axisShift},${yLen + 50})`)
+      .attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},${yLen + 50})`)
       .call(d3.axisBottom(x_axis).tickFormat(formatComma));
       
 //Bars
       var bars = graph.append("g")
       	.attr("class", "bars")
-		.attr("transform", `translate(${margin.left + axisShift},50)`);
+		.attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},50)`);
       
       bars.selectAll("rect")
       	.data(outdata)
@@ -1555,7 +1542,7 @@ graph.append("text")
        		return x_axis(Math.min(0, d.diffJobs));
       	})
       	.attr("y", function(d) { return y_axis(d.job_title); })
-      	.attr("height", barHeight)
+      	.attr("height", dimChart[0].barHeight)
       	.attr("width", function(d) { 
         	return Math.abs(x_axis(d.diffJobs) - x_axis(0))
       	})
@@ -1576,7 +1563,7 @@ graph.append("text")
 	  //Axis Labels
       var labels = graph.append("g")
       	.attr("class", "labels")
-		.attr("transform", `translate(${margin.left + axisShift},45)`);;
+		.attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},45)`);;
       
       labels.selectAll("text")
       	.data(outdata)
@@ -1598,7 +1585,7 @@ graph.append("text")
 //caption
 var captionStr = captionTxt(suppressed,yLen + 100);
 var caption =  graph.append("g")
-	     .attr("class","tabobj");
+	     .attr("class","captionobj");
 caption.selectAll("text")
         .data(captionStr)
 		.enter()
@@ -1612,12 +1599,12 @@ caption.selectAll("text")
 //Table, not really...
 
 var pos = x_axis(0);
-var tabArray = jobsHdr(outdata,0,yLen,barSpace,barHeight,totalDiff,pos, 1);
+var tabArray = jobsHdr(outdata,0,yLen,dimChart[0].barSpace,dimChart[0].barHeight,totalDiff,pos, 1);
 
 if(pos > 350) {
-   var rectanchorX = width * .20;
+   var rectanchorX = dimChart[0].width * .20;
 } else {
-    var rectanchorX = width * .75;
+    var rectanchorX = dimChart[0].width * .75;
 }; 
 
 
@@ -1630,8 +1617,8 @@ table.selectAll("rect")
 	.append("rect")
     .attr("x", function(d) {return rectanchorX;})
 	.attr("y", function(d) {return d.ypos;})
-    .attr("width",  barHeight)
-    .attr("height", barHeight)
+    .attr("width",  dimChart[0].barHeight)
+    .attr("height", dimChart[0].barHeight)
     .attr("fill", function(d) { return d.color;});
 
 table.selectAll("text")
@@ -1646,8 +1633,8 @@ table.selectAll("text")
 } else {
 	var titStr = "Please adjust the 'End Year' value.";
 	graph.append("text")
-			.attr("x", (width / 2))             
-			.attr("y", margin.top + 10 )
+			.attr("x", (dimChart[0].width / 2))             
+			.attr("y", dimChart[0].margin[0].top + 10 )
 			.attr("text-anchor", "middle")  
 			.style("font", "16px sans-serif") 
 			.style("text-decoration", "underline")  
