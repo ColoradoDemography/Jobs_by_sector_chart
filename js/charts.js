@@ -1587,6 +1587,7 @@ graph.append("text")
 
 //caption
 var captionStr = captionTxt(suppressed,yLen + 100);
+
 var caption =  graph.append("g")
 	     .attr("class","captionobj");
 caption.selectAll("text")
@@ -1594,7 +1595,7 @@ caption.selectAll("text")
 		.enter()
         .append("text")
         .text(function(d) {return d.captxt})
-	    .attr("x", 165)             
+	    .attr("x", 30)             
         .attr("y", function(d) {return d.ypos})
         .attr("text-anchor", "right")  
         .style("font", "9pt sans-serif");
@@ -1630,7 +1631,7 @@ table.selectAll("text")
 	.attr("y", function(d) {return d.ypos + 6;})
     .text( function(d) { return d.text;})
 	.style("font", "9pt sans-serif");
-	
+
 } else {
 	var titStr = "Please adjust the 'End Year' value.";
 	graph.append("text")
