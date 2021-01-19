@@ -1465,7 +1465,7 @@ var cfg = {
       labelMargin: 5,
       xAxisMargin: 5,
       legendRightMargin: 0,
-	  axisShift : 75
+	  axisShift : 80
     }
 var yLen = (dimChart[0].barHeight + dimChart[0].barSpace) * (outdata.length);
 
