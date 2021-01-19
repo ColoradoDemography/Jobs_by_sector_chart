@@ -1584,7 +1584,7 @@ graph.append("text")
       	})
       	.text(function(d) { return d.job_title; })
       	.style("fill", "black")
-		.style("font", "9pt sans-serif");
+		.style("font", "8pt sans-serif");
 
 //caption
 var captionStr = captionTxt(suppressed,yLen + 100);
