@@ -1464,7 +1464,8 @@ var formatPercent = d3.format(".1%")
 var cfg = {
       labelMargin: 5,
       xAxisMargin: 5,
-      legendRightMargin: 0
+      legendRightMargin: 0,
+	  axisShift : 75
     }
 var yLen = (dimChart[0].barHeight + dimChart[0].barSpace) * (outdata.length);
 
@@ -1525,14 +1526,14 @@ graph.append("text")
 //X Axis
     graph.append("g")
       .attr("class","X-Axis")
-	  .attr("transform", `translate(${dimChart[0].margin[0].left+ 15},${yLen + 50})`)
+	  .attr("transform", `translate(${dimChart[0].margin[0].left + cfg.axisShift},${yLen + 50})`)
       .call(d3.axisBottom(x_axis).tickFormat(formatComma));
       
 //Bars
 
       var bars = graph.append("g")
       	.attr("class", "bars")
-		.attr("transform", `translate(${dimChart[0].margin[0].left + 15},50)`);
+		.attr("transform", `translate(${dimChart[0].margin[0].left + cfg.axisShift},50)`);
 
  
       
@@ -1566,7 +1567,7 @@ graph.append("text")
 	  //Axis Labels
       var labels = graph.append("g")  //This is the job titles
       	.attr("class", "labels")
-		.attr("transform", `translate(${dimChart[0].margin[0].left + 15},45)`);;
+		.attr("transform", `translate(${dimChart[0].margin[0].left + cfg.axisShift},45)`);;
       
       labels.selectAll("text")
       	.data(outdata)
@@ -1595,7 +1596,7 @@ caption.selectAll("text")
 		.enter()
         .append("text")
         .text(function(d) {return d.captxt})
-	    .attr("x", 35)             
+	    .attr("x", cfg.axisShift)             
         .attr("y", function(d) {return d.ypos})
         .attr("text-anchor", "right")  
         .style("font", "9pt sans-serif");
