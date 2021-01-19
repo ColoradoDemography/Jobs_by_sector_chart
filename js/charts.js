@@ -1525,14 +1525,14 @@ graph.append("text")
 //X Axis
     graph.append("g")
       .attr("class","X-Axis")
-	  .attr("transform", `translate(${dimChart[0].margin[0].left},${yLen + 50})`)
+	  .attr("transform", `translate(${dimChart[0].margin[0].left+ 15},${yLen + 50})`)
       .call(d3.axisBottom(x_axis).tickFormat(formatComma));
       
 //Bars
 
       var bars = graph.append("g")
       	.attr("class", "bars")
-		.attr("transform", `translate(${dimChart[0].margin[0].left},50)`);
+		.attr("transform", `translate(${dimChart[0].margin[0].left + 15},50)`);
 
  
       
@@ -1566,7 +1566,7 @@ graph.append("text")
 	  //Axis Labels
       var labels = graph.append("g")  //This is the job titles
       	.attr("class", "labels")
-		.attr("transform", `translate(${dimChart[0].margin[0].left},45)`);;
+		.attr("transform", `translate(${dimChart[0].margin[0].left + 15},45)`);;
       
       labels.selectAll("text")
       	.data(outdata)
@@ -1595,7 +1595,7 @@ caption.selectAll("text")
 		.enter()
         .append("text")
         .text(function(d) {return d.captxt})
-	    .attr("x", 30)             
+	    .attr("x", 35)             
         .attr("y", function(d) {return d.ypos})
         .attr("text-anchor", "right")  
         .style("font", "9pt sans-serif");
