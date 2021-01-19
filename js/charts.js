@@ -115,7 +115,7 @@ var N1 = "captxt";
 var N2 = "ypos";
 for(row = 0; row < suppress.length; row++){
     var obj = {};
-	var yp = posY + 20 + eval(row * 10);
+	var yp = posY + 25 + eval(row * 10);
 	var ctxt = suppress[row].job_title;
 	obj[N1] = ctxt;
 	obj[N2] = yp;
@@ -125,7 +125,7 @@ for(row = 0; row < suppress.length; row++){
 
    var capTxthead = [
                   {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-				  {"captxt" : "Supressed Job Sectors:", "ypos" : posY+ 10}]
+				  {"captxt" : "Supressed Job Sectors:", "ypos" : posY+ 15}]
 				  
    var capTxttail = [
 		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: November, 2020.",  "ypos" : yp + 20},    //Update this line as the production date changes
@@ -149,12 +149,7 @@ var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
 //Percentage Format
 var formatPercent = d3.format(".1%")
 
-//Y y anchor position
-if(xPos > 400) {
-   var rectanchorY = posLen * .20;
-} else {
-	var rectanchorY = posLen * .65;
-}; 
+var rectanchorY = posLen + 80;
 
 if(type == 0){ //For the Count and Difference Tables
 		var jobsN = +tdata[0].sum_jobs;
@@ -175,12 +170,12 @@ if(type == 0){ //For the Count and Difference Tables
 		var midStr = "(" + formatDollar(tdata[1].min_wage) + " - " + formatDollar(tdata[1].max_wage) + ") " + formatPercent(tdata[1].pct_jobs);
 		var highStr = "(" + formatDollar(tdata[2].min_wage) + " - " + formatDollar(tdata[2].max_wage) + ") " + formatPercent(tdata[2].pct_jobs);
 		//Output structure
-		outArr = [{"color" : "#FFFFFF","text" : jobStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 1)},
-		          {"color" : "#FFFFFF","text" : wageStr, "ypos" : rectanchorY + ((bSpace + bHeight + 2) * 2)},
-				  {"color" : "#FFFFFF","text" : yrStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 3)},
-				  {"color" : "#D85F02", "text" : lowStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 4)},
-			      {"color" : "#757083", "text" : midStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 5)},
-			      {"color" : "#1B9E77", "text" : highStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 6)}];
+		outArr = [{"color" : "#FFFFFF","text" : jobStr, "ypos" : rectanchorY + (bSpace + bHeight + 1)},
+		          {"color" : "#FFFFFF","text" : wageStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 15)},
+				  {"color" : "#FFFFFF","text" : yrStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 30)},
+				  {"color" : "#D85F02", "text" : lowStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 45)},
+			      {"color" : "#757083", "text" : midStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 60)},
+			      {"color" : "#1B9E77", "text" : highStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 75)}];
      } else {
 //round jobs value and output string
 var tabtxt = formatComma(Math.round(jobsD)) + " Total Employment Change";
@@ -844,13 +839,17 @@ Promise.all(prom).then(function(data){
       var dataDiff = diffData(outDatabYR[0],outDataeYR[0]);
 	  var dataDiff = dataDiff.filter(function(d){return ((d.total_jobs1 != 0) && (d.total_jobs2 != 0))});
 
-	  //Generate unique supressed categories
+
+	  //Generate unique supressed categories  outDatabYR[1] and outDataeYR[1] are the supresssed categories
 	  var fullSup = outDatabYR[1].concat(outDataeYR[1]);
 	  var fullSup2 = fullSup.map(item => ({
 		        job_title : item.job_title
 	  }));
-	  
-	  var uniqueSup = removeDups(fullSup2);
+	  if (fullSup2.length !=0) {
+	      var uniqueSup = removeDups(fullSup2);
+	  } else {
+		  var uniqueSup = fullSup2;
+	  }
      //Calculating difference in Total Jobs
      var totalChng = Math.round(cDataeYR[0].total_jobs) - Math.round(cDatabYR[0].total_jobs);
 
@@ -1094,17 +1093,20 @@ function exportToCsv(filename, rows) {
 
 function imageDownload(outFileName,dimChart,chartType) {
 
-var svg_node = d3.select("svg").node();
-
-svg_node.setAttribute("viewBox", "0 0 950 450")
-
-saveSvgAsPng(svg_node, outFileName);
-
 if(chartType == 0) {
+	var count_node = d3.select("svg").node();
+	count_node.setAttribute("viewBox", "0 0 925 500");
+	saveSvgAsPng(count_node, outFileName);
 	updateCountChart(dimChart);
 } else if(chartType == 1) {
+	var pct_node = d3.select("svg").node();
+	pct_node.setAttribute("viewBox", "0 0 925 500");
+	saveSvgAsPng(pct_node, outFileName);
 	updatePCTChart(dimChart);
 } else {
+	var diff_node = d3.select("svg").node();
+	diff_node.setAttribute("viewBox", "130 0 925 500");
+	saveSvgAsPng(diff_node, outFileName);
 	updateDiffChart(dimChart);
 };
 }; //End of imageDownload
@@ -1285,11 +1287,9 @@ caption.selectAll("text")
 var pos = x_axis(0);
 var tabArray = jobsHdr(tabdata,YEAR,yLen,dimChart[0].barSpace,dimChart[0].barHeight,0,pos, 0);
 
-if(pos > 400) {
-   var rectanchorX = dimChart[0].width * .20;
-} else {
-    var rectanchorX = dimChart[0].width * .80;
-}; 
+
+    var rectanchorX = dimChart[0].width * .7;
+ 
 
 var table =  graph.append("g")
 	     .attr("class","tabobj");
@@ -1413,11 +1413,9 @@ caption.selectAll("text")
 var pos = x_axis(0);
 var tabArray = jobsHdr(tabdata,YEAR,yLen,dimChart[0].barSpace,dimChart[0].barHeight,0,pos, 0);
 
-if(pos > 400) {
-   var rectanchorX = dimChart[0].width * .20;
-} else {
-    var rectanchorX = dimChart[0].width * .75;
-}; 
+
+ var rectanchorX = dimChart[0].width * .7;
+
 
 var table =  graph.append("g")
 	     .attr("class","tabobj");
@@ -1458,12 +1456,14 @@ var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
 var formatDate = d3.timeFormat("%m/%d/%Y");
 //Percentage Format
 var formatPercent = d3.format(".1%")
+
+
 //defining the SVG  
  
 
 var cfg = {
       labelMargin: 5,
-      xAxisMargin: 10,
+      xAxisMargin: 5,
       legendRightMargin: 0
     }
 var yLen = (dimChart[0].barHeight + dimChart[0].barSpace) * (outdata.length);
@@ -1525,13 +1525,16 @@ graph.append("text")
 //X Axis
     graph.append("g")
       .attr("class","X-Axis")
-      .attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},${yLen + 50})`)
+	  .attr("transform", `translate(${dimChart[0].margin[0].left},${yLen + 50})`)
       .call(d3.axisBottom(x_axis).tickFormat(formatComma));
       
 //Bars
+
       var bars = graph.append("g")
       	.attr("class", "bars")
-		.attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},50)`);
+		.attr("transform", `translate(${dimChart[0].margin[0].left},50)`);
+
+ 
       
       bars.selectAll("rect")
       	.data(outdata)
@@ -1548,22 +1551,22 @@ graph.append("text")
       	})
       	.style("fill", function(d) { return d.bar_color;});
       	
-      
-	  bars.selectAll("text")
-	   .data(outdata)
-	   .enter()
-	   .append("text")
+   
+	  bars.selectAll("text")  //This is the number of jobs
+	    .data(outdata)
+        .enter()
+	    .append("text")
        .attr("x", function(d) { return d.diffJobs < 0 ? x_axis(+d.diffJobs) - 40 : x_axis(+d.diffJobs) + 10; })
        .attr("y", function(d,i) {return y_axis(d.job_title) + 5; })
        .attr("dy", ".35em")
        .text(function(d) { return formatComma(Math.round(d.diffJobs)); })
 	   .style("fill","black")
-	   .style("font", "9pt sans-serif");
+	   .style("font", "8pt sans-serif");
 	  
 	  //Axis Labels
-      var labels = graph.append("g")
+      var labels = graph.append("g")  //This is the job titles
       	.attr("class", "labels")
-		.attr("transform", `translate(${dimChart[0].margin[0].left + dimChart[0].axisShift},45)`);;
+		.attr("transform", `translate(${dimChart[0].margin[0].left},45)`);;
       
       labels.selectAll("text")
       	.data(outdata)
@@ -1580,7 +1583,7 @@ graph.append("text")
       	})
       	.text(function(d) { return d.job_title; })
       	.style("fill", "black")
-		.style("font", "10pt sans-serif");
+		.style("font", "9pt sans-serif");
 
 //caption
 var captionStr = captionTxt(suppressed,yLen + 100);
@@ -1601,11 +1604,9 @@ caption.selectAll("text")
 var pos = x_axis(0);
 var tabArray = jobsHdr(outdata,0,yLen,dimChart[0].barSpace,dimChart[0].barHeight,totalDiff,pos, 1);
 
-if(pos > 350) {
-   var rectanchorX = dimChart[0].width * .20;
-} else {
-    var rectanchorX = dimChart[0].width * .75;
-}; 
+
+var rectanchorX = dimChart[0].width * .7;
+
 
 
 var table =  graph.append("g")
