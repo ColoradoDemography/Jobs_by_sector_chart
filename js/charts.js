@@ -432,6 +432,7 @@ return(outData);
 //genData processes the data for the static chart
 function genData(indata, TYPE) {  
 
+//Look at this file.  If it has wages, then need to suppress when wages are missing...
 // Creating label array  
   var barLabels = [ { 'sector_id' : '00000', 'job_title' : 'Total Jobs'},
                     { 'sector_id' : '01000', 'job_title' : 'Agriculture'},
@@ -480,13 +481,20 @@ var outdata = join(barLabels,indata,"sector_id","sector_id",function(dat,col){
                });
 			   
 //Creating suppressed dataset
-var suppressed = outdata.filter(function(d) {return d.job_title != null;})
-			           .filter(function(d) {return d.total_jobs == 0;});
+debugger;
+var suppr1 = outdata.filter(function(d) {return d.job_title != null;});
+var suppr2 = suppr1.filter(function(d) {return d.total_jobs == 0});
+var suppr3 = suppr1.filter(function(d) {return d.avg_wage == null || d.avg_wage == 0;});
+					  
+var suppressed = removeDups(suppr2.concat(suppr3));
+
 
 //Modifying cutdata for final processing
-var outdata = outdata.filter(function(d) {return d.job_title != null;})
-			         .filter(function(d) {return d.total_jobs > 0;})
-				 
+if(suppressed.length > 0){
+var  difference = outdata.filter(x => !suppressed.includes(x));
+ outdata = difference;
+}
+
 //TYPE == 0 is for chart output, removes the total jobs row
 if(TYPE == 0){
 	var outdata = outdata.filter(function(d) {return d.sector_id != "00000";});
@@ -585,11 +593,12 @@ Promise.all(prom).then(function(data){
 		  d.population_year = d.population_year;
 		  d.total_jobs = +d.total_jobs;
 	  });
+
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
       var chartData2 = genData(chartData,0);
 	  genCountChart(chartData2[0],chartData2[1],data[2],CTY,YEAR,dimChart); //Generates a bar chart
      }).catch(function(error){
-		 console.log("Process Error");
+		 console.log("Process Error genChartPromise");
 	 });
  };  //end genChartPromise
  
@@ -653,7 +662,7 @@ if(chartData2[1].length > 0){
 		job_sector : item.job_title,
 		wage_category : item.category,
 		year: item.population_year,
-		wage : formatDollar(item.avg_wage),
+		wage : (item.avg_wage == null) ? "Suppressed" : formatDollar(item.avg_wage), //Midufy this?
 		jobs: "Suppressed"}));
 		
 		var dataOut = dataOut.concat(adjData).concat(suppressed).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
@@ -662,7 +671,7 @@ if(chartData2[1].length > 0){
       }
 		exportToCsv(FNAME, dataOut);
      }).catch(function(error){
-		 console.log("Process Error");
+		 console.log("Process Error genDownloadCountPromise");
 	 });
  };  //end genDownloadCountPromise
 
@@ -706,7 +715,7 @@ Promise.all(prom).then(function(data){
  
 	  genPCTChart(chartData3,supr,data[2],CTY,YEAR,dimChart); //Generates a bar chart
      }).catch(function(error){
-		 console.log("Process Error");
+		 console.log("Process Error genPCTPromise");
 	 });
  };  //end genPCTPromise
 
@@ -793,7 +802,7 @@ if(chartData2[1].length > 0){
        }
 		exportToCsv(FNAME, dataOut);
      }).catch(function(error){
-		 console.log("Process Error");
+		 console.log("Process Error genDownloadPCTPromise");
 	 });
  };  //end genDownloadPCTPromise
 
@@ -855,7 +864,7 @@ Promise.all(prom).then(function(data){
 
 	  genDiffChart(dataDiff,uniqueSup,totalChng,CTY,bYEAR,eYEAR,dimChart); //Generates a bar chart
      }).catch(function(error){
-		 console.log("Process Error");
+		 console.log("Process Error genDiffProise");
 	 });
  };  //end genDiffPromise
  
@@ -952,7 +961,7 @@ var sup = "Suppressed";
 
 		exportToCsv(FNAME, dataOut);
      }).catch(function(error){
-		 console.log("Process Error");
+		 console.log("Process Error genDownloadDiffPromise");
 	 });
  };  //end genDownloadDiffPromise
 
