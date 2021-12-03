@@ -100,8 +100,8 @@ function captionTxt(suppress, posY) {
 	//Date Format
    var formatDate = d3.timeFormat("%m/%d/%Y");
    
-   var dateStr = "Programming by the State Demography Office, Print Date: "+ formatDate(new Date);
-   if(suppress.length == 0){
+   var dateStr = "Visualization by the State Demography Office, Print Date: "+ formatDate(new Date);
+   if(suppress.length <= 2){
    
    var capTxt = [
                   {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
@@ -481,7 +481,7 @@ var outdata = join(barLabels,indata,"sector_id","sector_id",function(dat,col){
                });
 			   
 //Creating suppressed dataset
-debugger;
+
 var suppr1 = outdata.filter(function(d) {return d.job_title != null;});
 var suppr2 = suppr1.filter(function(d) {return d.total_jobs == 0});
 var suppr3 = suppr1.filter(function(d) {return d.avg_wage == null || d.avg_wage == 0;});
@@ -490,9 +490,9 @@ var suppressed = removeDups(suppr2.concat(suppr3));
 
 
 //Modifying cutdata for final processing
-if(suppressed.length > 0){
+if(suppressed.length > 1){
 var  difference = outdata.filter(x => !suppressed.includes(x));
- outdata = difference;
+var  outdata = difference;
 }
 
 //TYPE == 0 is for chart output, removes the total jobs row
@@ -832,6 +832,7 @@ Promise.all(prom).then(function(data){
 		  d.population_year = d.population_year;
 		  d.total_jobs = +d.total_jobs;
 	  });
+	  
 
 	  var jobsbYR = data[0].filter(function(d){return d.population_year == bYEAR});
 	  var jobseYR = data[0].filter(function(d){return d.population_year == eYEAR});
@@ -848,23 +849,22 @@ Promise.all(prom).then(function(data){
       var dataDiff = diffData(outDatabYR[0],outDataeYR[0]);
 	  var dataDiff = dataDiff.filter(function(d){return ((d.total_jobs1 != 0) && (d.total_jobs2 != 0))});
 
-
 	  //Generate unique supressed categories  outDatabYR[1] and outDataeYR[1] are the supresssed categories
 	  var fullSup = outDatabYR[1].concat(outDataeYR[1]);
-	  var fullSup2 = fullSup.map(item => ({
-		        job_title : item.job_title
-	  }));
-	  if (fullSup2.length !=0) {
-	      var uniqueSup = removeDups(fullSup2);
+	  if (fullSup.length > 2) {
+		  var fullSup2 = fullSup.map(item => ({
+					job_title : item.job_title
+		  }));
+		  var uniqueSup = removeDups(fullSup2);
 	  } else {
-		  var uniqueSup = fullSup2;
+		  var uniqueSup = fullSup;
 	  }
      //Calculating difference in Total Jobs
      var totalChng = Math.round(cDataeYR[0].total_jobs) - Math.round(cDatabYR[0].total_jobs);
 
 	  genDiffChart(dataDiff,uniqueSup,totalChng,CTY,bYEAR,eYEAR,dimChart); //Generates a bar chart
      }).catch(function(error){
-		 console.log("Process Error genDiffProise");
+		 console.log("Process Error genDiffPromise");
 	 });
  };  //end genDiffPromise
  
@@ -1596,6 +1596,7 @@ graph.append("text")
 		.style("font", "8pt sans-serif");
 
 //caption
+
 var captionStr = captionTxt(suppressed,yLen + 100);
 
 var caption =  graph.append("g")
