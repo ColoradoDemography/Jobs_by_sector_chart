@@ -101,6 +101,7 @@ function captionTxt(suppress, posY) {
    var formatDate = d3.timeFormat("%m/%d/%Y");
    
    var dateStr = "Visualization by the State Demography Office, Print Date: "+ formatDate(new Date);
+
    if(suppress.length <= 2){
    
    var capTxt = [
@@ -165,30 +166,41 @@ if(type == 0){ //For the Count and Difference Tables
 		var wageVal = formatDollar(wageN);
         var wageStr = wageVal + " Average Annual Wage";
         var yrStr = yr + " Employment Share by Wage";
-		
-		var lowStr = "(" + formatDollar(tdata[0].min_wage) + " - " + formatDollar(tdata[0].max_wage) + ") " + formatPercent(tdata[0].pct_jobs);
-		var midStr = "(" + formatDollar(tdata[1].min_wage) + " - " + formatDollar(tdata[1].max_wage) + ") " + formatPercent(tdata[1].pct_jobs);
-		var highStr = "(" + formatDollar(tdata[2].min_wage) + " - " + formatDollar(tdata[2].max_wage) + ") " + formatPercent(tdata[2].pct_jobs);
-		//Output structure
-		outArr = [{"color" : "#FFFFFF","text" : jobStr, "ypos" : rectanchorY + (bSpace + bHeight + 1)},
+
+	var outArr = [{"color" : "#FFFFFF","text" : jobStr, "ypos" : rectanchorY + (bSpace + bHeight + 1)},
 		          {"color" : "#FFFFFF","text" : wageStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 15)},
-				  {"color" : "#FFFFFF","text" : yrStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 30)},
-				  {"color" : "#D85F02", "text" : lowStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 45)},
-			      {"color" : "#757083", "text" : midStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 60)},
-			      {"color" : "#1B9E77", "text" : highStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 75)}];
+				  {"color" : "#FFFFFF","text" : yrStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 30)}];
+    for(i = 0; i < tdata.length; i++) {
+		var tabStr = "(" + formatDollar(tdata[i].min_wage) + " - " + formatDollar(tdata[i].max_wage) + ") " + formatPercent(tdata[i].pct_jobs);
+		if(tdata[i].category == 'Low'){
+			outArr.push({"color" : "#D85F02", "text" : tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 45)});
+		};
+		if(tdata[i].category == 'Mid'){
+			outArr.push({"color" : "#757083", "text" : tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 60)});
+		};
+		if(tdata[i].category == 'High'){
+			outArr.push({"color" : "#1B9E77", "text" : tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 75)});
+		};
+	} //i
      } else {
 //round jobs value and output string
 var tabtxt = formatComma(Math.round(jobsD)) + " Total Employment Change";
-var outArr = [ {"color" : "#FFFFFF","text" : tabtxt, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 1)},
-			{"color" : '#D85F02',"text" : "Less than 80% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 2)},
-			{"color" : '#757083', "text" : "Between 81% to 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 3)},
-			{"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 4)}];
-}
-
- 
+var outArr = [ {"color" : "#FFFFFF","text" : tabtxt, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 1)}]
+   for(i = 0; i < tdata.length;i++) {
+		if(tdata[i].category == 'Low'){
+			outArr.push({"color" : '#D85F02',"text" : "Less than 80% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 2)});
+		}
+		if(tdata[i].category == 'Mid'){
+			outArr.push({"color" : '#757083', "text" : "Between 81% to 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 3)});
+		}
+		if(tdata[i].category == 'High'){
+			outArr({"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 4)});
+		}
+	} //i
+ } //if
 
 return outArr;
-};
+};  //end of jobsHdr
 
 
 function switchFIPS(county){
@@ -1299,7 +1311,6 @@ var tabArray = jobsHdr(tabdata,YEAR,yLen,dimChart[0].barSpace,dimChart[0].barHei
 
     var rectanchorX = dimChart[0].width * .7;
  
-
 var table =  graph.append("g")
 	     .attr("class","tabobj");
 		 
