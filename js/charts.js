@@ -173,30 +173,22 @@ if(type == 0){ //For the Count and Difference Tables
     for(i = 0; i < tdata.length; i++) {
 		var tabStr = "(" + formatDollar(tdata[i].min_wage) + " - " + formatDollar(tdata[i].max_wage) + ") " + formatPercent(tdata[i].pct_jobs);
 		if(tdata[i].category == 'Low'){
-			outArr.push({"color" : "#D85F02", "text" : tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 45)});
+			outArr.push({"color" : "#D85F02", "text" : " Low Wage Jobs: " +tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 45)});
 		};
 		if(tdata[i].category == 'Mid'){
-			outArr.push({"color" : "#757083", "text" : tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 60)});
+			outArr.push({"color" : "#757083", "text" : " Mid Wage Jobs: " + tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 60)});
 		};
 		if(tdata[i].category == 'High'){
-			outArr.push({"color" : "#1B9E77", "text" : tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 75)});
+			outArr.push({"color" : "#1B9E77", "text" : " High Wage Jobs: " + tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 75)});
 		};
 	} //i
      } else {
 //round jobs value and output string
 var tabtxt = formatComma(Math.round(jobsD)) + " Total Employment Change";
-var outArr = [ {"color" : "#FFFFFF","text" : tabtxt, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 1)}]
-   for(i = 0; i < tdata.length;i++) {
-		if(tdata[i].category == 'Low'){
-			outArr.push({"color" : '#D85F02',"text" : "Less than 80% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 2)});
-		}
-		if(tdata[i].category == 'Mid'){
-			outArr.push({"color" : '#757083', "text" : "Between 81% to 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 3)});
-		}
-		if(tdata[i].category == 'High'){
-			outArr({"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 4)});
-		}
-	} //i
+var outArr = [ {"color" : "#FFFFFF","text" : tabtxt, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 1)},
+			   {"color" : '#D85F02',"text" : "Less than 80% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 2)},
+			   {"color" : '#757083', "text" : "Between 81% to 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 3)},
+			   {"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 4)}];
  } //if
 
 return outArr;
