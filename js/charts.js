@@ -618,7 +618,7 @@ var formatDecimalComma = d3.format(",.0f");
 var formatDollar = function(d) { return "$" + formatDecimalComma(d); };
 
 var numFIPS = +FIPS;
- 
+
 var jobsdataStr = "https://gis.dola.colorado.gov/lookups/jobs?county=" + numFIPS + "&year=" + YEAR;
 var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ FIPS + "&year=" + YEAR;
 
@@ -626,6 +626,7 @@ var prom = [d3.json(jobsdataStr),d3.json(wagedataStr)];
 
 
 Promise.all(prom).then(function(data){
+	 
       data[0].forEach(function(d){
 		  d.area_code = zero3(d.area_code);
 		  d.sector_id = zero5(d.sector_id);
@@ -633,8 +634,9 @@ Promise.all(prom).then(function(data){
 		  d.population_year = d.population_year;
 		  d.total_jobs = +d.total_jobs;
 	  });
-	 
+
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
+
       var chartData2 = genData(chartData,1);
 	  
 	  var adjJobs = createAdjData(chartData2[0]);
@@ -648,7 +650,7 @@ Promise.all(prom).then(function(data){
 		    "year": YEAR,
 		    "wage" : "",
 		    "jobs": formatComma(Math.round(adjJobs))};
-			
+debugger;	
 	  var dataOut = chartData2[0].map(item => ({
 		fips_code : item.area_code,
 		county: CTY,
@@ -658,7 +660,8 @@ Promise.all(prom).then(function(data){
 		year: item.population_year,
 		wage : formatDollar(item.avg_wage),
 		jobs: formatComma(Math.round(item.total_jobs))}));
-if(chartData2[1].length > 0){
+debugger;		
+if(chartData2[1].length > 1){ //Has supressions
 		var suppressed = chartData2[1].map(item => ({
 		fips_code : item.area_code,
 		county: CTY,
@@ -666,7 +669,7 @@ if(chartData2[1].length > 0){
 		job_sector : item.job_title,
 		wage_category : item.category,
 		year: item.population_year,
-		wage : (item.avg_wage == null) ? "Suppressed" : formatDollar(item.avg_wage), //Midufy this?
+		wage : (item.avg_wage == null) ? "Suppressed" : formatDollar(item.avg_wage), 
 		jobs: "Suppressed"}));
 		
 		var dataOut = dataOut.concat(adjData).concat(suppressed).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
@@ -787,7 +790,7 @@ Promise.all(prom).then(function(data){
 		jobs: formatComma(Math.round(item.total_jobs)),
 		percentage : formatPercent(item.pct_jobs)}));
 		
-if(chartData2[1].length > 0){
+if(chartData2[1].length > 1){
 	var suppressed = chartData2[1].map(item => ({
 		fips_code : item.area_code,
 		county: CTY,
