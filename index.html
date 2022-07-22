@@ -111,6 +111,7 @@ var counties = [{'county': '', 'fips': ''},{'county':'Adams County', 'fips': '00
 d3.json("https://gis.dola.colorado.gov/lookups/jobsYRS").then(function(json1) {
 
  var yrsList = json1.map(function(d){return d.population_year;});
+ yrsList.pop()  //MODIFY THIS WHEN WAGE DATA IS AVAILABLE
  var lastYr = 2020; // d3.max(yrsList); MODIFY THIS WHEN WAGE DATA IS AVAILABLE
 
 //Building Years dropdown
