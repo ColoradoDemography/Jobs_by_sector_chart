@@ -590,16 +590,20 @@ var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
 
 
 Promise.all(prom).then(function(data){
+
       data[0].forEach(function(d){
-		  d.area_code = zero3(d.area_code);
-		  d.sector_id = zero5(d.sector_id);
+		  d.area_code = d.area_code;
+		  d.sector_id = d.sector_id;
 		  d.sector_name = d.sector_name;
 		  d.population_year = d.population_year;
 		  d.total_jobs = +d.total_jobs;
 	  });
 
+
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
+
       var chartData2 = genData(chartData,0);
+
 	  genCountChart(chartData2[0],chartData2[1],data[2],CTY,YEAR,dimChart); //Generates a bar chart
      }).catch(function(error){
 		 console.log("Process Error genChartPromise");
@@ -650,7 +654,7 @@ Promise.all(prom).then(function(data){
 		    "year": YEAR,
 		    "wage" : "",
 		    "jobs": formatComma(Math.round(adjJobs))};
-debugger;	
+
 	  var dataOut = chartData2[0].map(item => ({
 		fips_code : item.area_code,
 		county: CTY,
@@ -660,7 +664,7 @@ debugger;
 		year: item.population_year,
 		wage : formatDollar(item.avg_wage),
 		jobs: formatComma(Math.round(item.total_jobs))}));
-debugger;		
+		
 if(chartData2[1].length > 1){ //Has supressions
 		var suppressed = chartData2[1].map(item => ({
 		fips_code : item.area_code,
