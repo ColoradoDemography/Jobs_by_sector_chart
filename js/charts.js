@@ -448,7 +448,7 @@ function genData(indata, TYPE) {
 					{ 'sector_id' : '07000', 'job_title' : 'Retail Trade'},
 					{ 'sector_id' : '08000', 'job_title' : 'Transportation and Warehousing'},
 					{ 'sector_id' : '09000', 'job_title' : 'Information'},
-					{ 'sector_id' : '10000', 'job_title' : 'Financial Activities'},
+					{ 'sector_id' : '10000', 'job_title' : 'Finance Activities'},
 					{ 'sector_id' : '10150', 'job_title' : 'Real Estate'},
 					{ 'sector_id' : '11000', 'job_title' : 'Prof., Sci. and Tech. Services'},
 					{ 'sector_id' : '11025', 'job_title' : 'Mngmt. of Companies'},
@@ -581,10 +581,15 @@ var zero3 = d3.format("03d");
 var zero5 = d3.format("05d");
 
 var numFIPS = +FIPS;
- 
-var boundaryStr = "https://gis.dola.colorado.gov/lookups/wage_bound?county=" + FIPS + "&year=" + YEAR;
+
+/* Data Notes
+the inputs for jobsdataStr (area_code and sector_id = non-zero-filled number string)
+All others are zero-filled number string
+The Postgres tables have to have these data specifications.
+*/
 var jobsdataStr = "https://gis.dola.colorado.gov/lookups/jobs?county=" + numFIPS + "&year=" + YEAR;
-var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ numFIPS + "&year=" + YEAR;
+var boundaryStr = "https://gis.dola.colorado.gov/lookups/wage_bound?county=" + FIPS + "&year=" + YEAR;
+var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ FIPS + "&year=" + YEAR;
 
 var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
 
@@ -592,8 +597,8 @@ var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
 Promise.all(prom).then(function(data){
 
       data[0].forEach(function(d){
-		  d.area_code = d.area_code;
-		  d.sector_id = d.sector_id;
+		  d.area_code = zero3(d.area_code);
+		  d.sector_id = zero5(d.sector_id);
 		  d.sector_name = d.sector_name;
 		  d.population_year = d.population_year;
 		  d.total_jobs = +d.total_jobs;
