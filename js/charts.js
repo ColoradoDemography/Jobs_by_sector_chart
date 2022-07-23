@@ -584,7 +584,7 @@ var numFIPS = +FIPS;
  
 var boundaryStr = "https://gis.dola.colorado.gov/lookups/wage_bound?county=" + FIPS + "&year=" + YEAR;
 var jobsdataStr = "https://gis.dola.colorado.gov/lookups/jobs?county=" + numFIPS + "&year=" + YEAR;
-var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ FIPS + "&year=" + YEAR;
+var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ numFIPS + "&year=" + YEAR;
 
 var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
 
