@@ -1130,7 +1130,7 @@ if(chartType == 0) {
 	updatePCTChart(dimChart);
 } else {
 	var diff_node = d3.select("svg").node();
-	diff_node.setAttribute("viewBox", "130 0 925 500");
+	diff_node.setAttribute("viewBox", "0 0 925 500");
 	saveSvgAsPng(diff_node, outFileName);
 	updateDiffChart(dimChart);
 };
