@@ -106,7 +106,7 @@ function captionTxt(suppress, posY) {
    
    var capTxt = [
                   {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2021.",  "ypos" :posY + 14},    //Update this line as the production date changes
+		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2022.",  "ypos" :posY + 14},    //Update this line as the production date changes
 				  {"captxt" : dateStr,  "ypos" : posY + 28}
 				 ];
    } else {
@@ -129,7 +129,7 @@ for(row = 0; row < suppress.length; row++){
 				  {"captxt" : "Supressed Job Sectors:", "ypos" : posY+ 15}]
 				  
    var capTxttail = [
-		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2021.",  "ypos" : yp + 20},    //Update this line as the production date changes
+		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2022.",  "ypos" : yp + 20},    //Update this line as the production date changes
 				  {"captxt" : dateStr,  "ypos" : yp + 30}
 				 ];
 var capTxt = capTxthead.concat(supList).concat(capTxttail);
