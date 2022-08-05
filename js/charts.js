@@ -106,7 +106,7 @@ function captionTxt(suppress, posY) {
    
    var capTxt = [
                   {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: November, 2020.",  "ypos" :posY + 14},    //Update this line as the production date changes
+		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2021.",  "ypos" :posY + 14},    //Update this line as the production date changes
 				  {"captxt" : dateStr,  "ypos" : posY + 28}
 				 ];
    } else {
@@ -129,7 +129,7 @@ for(row = 0; row < suppress.length; row++){
 				  {"captxt" : "Supressed Job Sectors:", "ypos" : posY+ 15}]
 				  
    var capTxttail = [
-		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: November, 2020.",  "ypos" : yp + 20},    //Update this line as the production date changes
+		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2021.",  "ypos" : yp + 20},    //Update this line as the production date changes
 				  {"captxt" : dateStr,  "ypos" : yp + 30}
 				 ];
 var capTxt = capTxthead.concat(supList).concat(capTxttail);
@@ -1130,7 +1130,7 @@ if(chartType == 0) {
 	updatePCTChart(dimChart);
 } else {
 	var diff_node = d3.select("svg").node();
-	diff_node.setAttribute("viewBox", "0 0 925 500");
+	diff_node.setAttribute("viewBox", "0 0 1050 500");
 	saveSvgAsPng(diff_node, outFileName);
 	updateDiffChart(dimChart);
 };
@@ -1207,6 +1207,9 @@ if(seldCTY == "Broomfield County" && begYEAR < 2010){
 // Removes the chart
 
 var graph = d3.select("svg").remove();
+
+//Updating margins
+//dimChart.margin = "margin" : [{top: 20, right: 210, bottom: 40, left: 100}]
 
 genDiffPromise(seldFIPS,begYEAR,endYEAR,seldCTY,dimChart);
 
