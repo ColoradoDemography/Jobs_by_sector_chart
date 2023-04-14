@@ -1120,17 +1120,17 @@ function imageDownload(outFileName,dimChart,chartType) {
 
 if(chartType == 0) {
 	var count_node = d3.select("svg").node();
-	count_node.setAttribute("viewBox", "0 0 925 500");
+	count_node.setAttribute("viewBox", "40 20 1050 475");
 	saveSvgAsPng(count_node, outFileName);
 	updateCountChart(dimChart);
 } else if(chartType == 1) {
 	var pct_node = d3.select("svg").node();
-	pct_node.setAttribute("viewBox", "0 0 925 500");
+	pct_node.setAttribute("viewBox", "40 20 1050 475");
 	saveSvgAsPng(pct_node, outFileName);
 	updatePCTChart(dimChart);
 } else {
 	var diff_node = d3.select("svg").node();
-	diff_node.setAttribute("viewBox", "0 0 1050 500");
+	diff_node.setAttribute("viewBox", "40 20 1050 475");
 	saveSvgAsPng(diff_node, outFileName);
 	updateDiffChart(dimChart);
 };
