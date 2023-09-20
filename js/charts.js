@@ -1249,8 +1249,8 @@ var y_axis = d3.scaleBand()
   var graph = d3.select("#chart")
 	     .append("svg")
 		 .attr("preserveAspectRatio", "xMinYMin meet")
-         .attr("viewBox", [dimChart[0].viewBx[0].xVal, dimChart[0].viewBx[0].yVal, dimChart[0].viewBx[0].vWidth, dimChart[0].viewBx[0].vHeight]);  //Sets Viewbox
-
+         .attr("viewBox", [dimChart[0].viewBx[0].xVal, dimChart[0].viewBx[0].yVal, dimChart[0].viewBx[0].vWidth, dimChart[0].viewBx[0].vHeight])  //Sets Viewbox
+		 .style("background-color", 'white');
 //Title
 var titStr = "Jobs by Sector: " + CTY +", "+ YEAR;
 graph.append("text")
@@ -1377,7 +1377,8 @@ var y_axis = d3.scaleBand()
   var graph = d3.select("#chart")
 	     .append("svg")
 		 .attr("preserveAspectRatio", "xMinYMin meet")
-         .attr("viewBox", [dimChart[0].viewBx[0].xVal, dimChart[0].viewBx[0].yVal, dimChart[0].viewBx[0].vWidth, dimChart[0].viewBx[0].vHeight]);
+         .attr("viewBox", [dimChart[0].viewBx[0].xVal, dimChart[0].viewBx[0].yVal, dimChart[0].viewBx[0].vWidth, dimChart[0].viewBx[0].vHeight])
+		 .style("background-color", 'white');
 
 //Title
 var titStr = "Jobs by Sector, Percentage: " + CTY +", "+ YEAR;
@@ -1512,7 +1513,9 @@ var y_axis = d3.scaleBand()
 var graph = d3.select("#chart")
 	     .append("svg")
 		 .attr("preserveAspectRatio", "xMinYMin meet")
-         .attr("viewBox", [dimChart[0].viewBx[0].xVal, dimChart[0].viewBx[0].yVal, dimChart[0].viewBx[0].vWidth, dimChart[0].viewBx[0].vHeight]);  //This sets the viewBox to the size of the SVG
+         .attr("viewBox", [dimChart[0].viewBx[0].xVal, dimChart[0].viewBx[0].yVal, dimChart[0].viewBx[0].vWidth, dimChart[0].viewBx[0].vHeight])
+		 .style("background-color", 'white');
+		 //This sets the viewBox to the size of the SVG
 		 
 if(YEAR1 == YEAR2) {
 	var titStr = "The selected year values are equal.  Please adjust the 'Start Year' or 'End Year' values.";
