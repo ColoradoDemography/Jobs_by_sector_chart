@@ -171,7 +171,9 @@ if(type == 0){ //For the Count and Difference Tables
 		          {"color" : "#FFFFFF","text" : wageStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 15)},
 				  {"color" : "#FFFFFF","text" : yrStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 30)}];
     for(i = 0; i < tdata.length; i++) {
-		var tabStr = "(" + formatDollar(tdata[i].min_wage) + " - " + formatDollar(tdata[i].max_wage) + ") " + formatPercent(tdata[i].pct_jobs);
+		//Modification for new labels 12/2023
+		// var tabStr = "(" + formatDollar(tdata[i].min_wage) + " - " + formatDollar(tdata[i].max_wage) + ") " + formatPercent(tdata[i].pct_jobs);
+		var tabStr = tdata[i].label ;
 		if(tdata[i].category == 'Low'){
 			outArr.push({"color" : "#D85F02", "text" : " Low Wage Jobs: " +tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 45)});
 		};
@@ -534,7 +536,7 @@ var adjJobs = d3.rollup(chartData3, v => d3.sum(v, d => d.total_jobs));
 return(adjJobs);
 };  //end of createAdjData
 
-//unmatchedArray adds missing records prior to calculting the differences
+//unmatchedArray adds missing records prior to calculating the differences
 var unmatchedArray = function(obj1,obj2) {
   var fips = obj2[0].area_code;
     var yr = obj2[0].population_year;
@@ -1513,9 +1515,9 @@ var y_axis = d3.scaleBand()
 var graph = d3.select("#chart")
 	     .append("svg")
 		 .attr("preserveAspectRatio", "xMinYMin meet")
-         .attr("viewBox", [dimChart[0].viewBx[0].xVal, dimChart[0].viewBx[0].yVal, dimChart[0].viewBx[0].vWidth, dimChart[0].viewBx[0].vHeight])
+         .attr("viewBox", [dimChart[0].viewBx[0].xVal, dimChart[0].viewBx[0].yVal, dimChart[0].viewBx[0].vWidth, dimChart[0].viewBx[0].vHeight]) 		 //This sets the viewBox to the size of the SVG
 		 .style("background-color", 'white');
-		 //This sets the viewBox to the size of the SVG
+
 		 
 if(YEAR1 == YEAR2) {
 	var titStr = "The selected year values are equal.  Please adjust the 'Start Year' or 'End Year' values.";
