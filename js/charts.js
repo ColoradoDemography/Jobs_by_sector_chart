@@ -106,7 +106,7 @@ function captionTxt(suppress, posY) {
    
    var capTxt = [
                   {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2022.",  "ypos" :posY + 14},    //Update this line as the production date changes
+		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2023.",  "ypos" :posY + 14},    //Update this line as the production date changes
 				  {"captxt" : dateStr,  "ypos" : posY + 28}
 				 ];
    } else {
@@ -129,7 +129,7 @@ for(row = 0; row < suppress.length; row++){
 				  {"captxt" : "Supressed Job Sectors:", "ypos" : posY+ 15}]
 				  
    var capTxttail = [
-		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2022.",  "ypos" : yp + 20},    //Update this line as the production date changes
+		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2023.",  "ypos" : yp + 20},    //Update this line as the production date changes
 				  {"captxt" : dateStr,  "ypos" : yp + 30}
 				 ];
 var capTxt = capTxthead.concat(supList).concat(capTxttail);
@@ -597,7 +597,8 @@ var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
 
 
 Promise.all(prom).then(function(data){
-
+debugger
+console.log(data)
       data[0].forEach(function(d){
 		  d.area_code = zero3(d.area_code);
 		  d.sector_id = zero5(d.sector_id);
