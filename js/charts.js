@@ -157,8 +157,8 @@ if(type == 0){ //For the Count and Difference Tables
 		var wageN = +tdata[0].total_wage;
 		var jobsRnd = Math.round(jobsN);
 		//Scale jobsRnd
-		if(jobsRnd > 1000000){
-		   var jobVal = formatDecimal(jobsRnd/1000000);
+		if(jobsRnd > 100000){
+		   var jobVal = formatDecimal(jobsRnd/100000);
 		   var jobStr = jobVal + " Million Total Estimated Jobs";
         } else {
 		   var jobStr = formatComma(jobsRnd) + " Total Estimated Jobs";
@@ -421,7 +421,10 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
 //buildData creates the basic data set
 function buildData(jData,wData){
 
-	var outData = join(jData,wData,"sector_id","sector_id",function(dat,col){
+	
+	var jData_f = jData.filter(function(d) {return d.sector_id != '00092';});
+	
+	var outData = join(jData_f,wData,"sector_id","sector_id",function(dat,col){
 		return{
 			area_code : col.area_code,
 			sector_id : col.sector_id,
@@ -440,30 +443,30 @@ function genData(indata, TYPE) {
 
 //Look at this file.  If it has wages, then need to suppress when wages are missing...
 // Creating label array  
-  var barLabels = [ { 'sector_id' : '00000', 'job_title' : 'Total Jobs'},
-                    { 'sector_id' : '01000', 'job_title' : 'Agriculture'},
-					{ 'sector_id' : '02000', 'job_title' : 'Mining'},
-					{ 'sector_id' : '03000', 'job_title' : 'Utilities'},
-					{ 'sector_id' : '04000', 'job_title' : 'Construction'},
-					{ 'sector_id' : '05000', 'job_title' : 'Manufacturing'},
-					{ 'sector_id' : '06000', 'job_title' : 'Wholesale Trade'},
-					{ 'sector_id' : '07000', 'job_title' : 'Retail Trade'},
-					{ 'sector_id' : '08000', 'job_title' : 'Transportation and Warehousing'},
-					{ 'sector_id' : '09000', 'job_title' : 'Information'},
-					{ 'sector_id' : '10000', 'job_title' : 'Finance Activities'},
-					{ 'sector_id' : '10150', 'job_title' : 'Real Estate'},
-					{ 'sector_id' : '11000', 'job_title' : 'Prof., Sci. and Tech. Services'},
-					{ 'sector_id' : '11025', 'job_title' : 'Mngmt. of Companies'},
-					{ 'sector_id' : '11050', 'job_title' : 'Admin. Support and Waste Mngmt.'},
-					{ 'sector_id' : '12000', 'job_title' : 'Education'},
-					{ 'sector_id' : '12015', 'job_title' : 'Health Services'},
-					{ 'sector_id' : '13000', 'job_title' : 'Arts, Entertainment and Recreation'},
-					{ 'sector_id' : '13015', 'job_title' : 'Accommodation and Food Services'},
-					{ 'sector_id' : '14000', 'job_title' : 'Other Services'},
-					{ 'sector_id' : '15010', 'job_title' : 'Federal Government'},
-					{ 'sector_id' : '15014', 'job_title' : 'Military'},
-					{ 'sector_id' : '15020', 'job_title' : 'State Government'},
-					{ 'sector_id' : '15030', 'job_title' : 'Local Government'}];
+  var barLabels = [ {'sector_id': '00000', 'job_title': 'Total All Sectors'},
+					{'sector_id': '00001', 'job_title': 'Federal Government'},
+					{'sector_id': '00002', 'job_title': 'State Government'},
+					{'sector_id': '00003', 'job_title': 'Local Government'},
+					{'sector_id': '00011', 'job_title': 'Agriculture, Forestry, Fishing and Hunting'},
+					{'sector_id': '00021', 'job_title': 'Mining'},
+					{'sector_id': '00022', 'job_title': 'Utilities'},
+					{'sector_id': '00023', 'job_title': 'Construction'},
+					{'sector_id': '00042', 'job_title': 'Wholesale Trade'},
+					{'sector_id': '00051', 'job_title': 'Information'},
+					{'sector_id': '00052', 'job_title': 'Finance and Insurance'},
+					{'sector_id': '00053', 'job_title': 'Real Estate and Rental and Leasing'},
+					{'sector_id': '00054', 'job_title': 'Professional, Scientific, and Technical Services'},
+					{'sector_id': '00055', 'job_title': 'Management of Companies and Enterprises'},
+					{'sector_id': '00056', 'job_title': 'Admin. and Waste Management Services'},
+					{'sector_id': '00061', 'job_title': 'Educational Services'},
+					{'sector_id': '00062', 'job_title': 'Health Care and Social Assistance'},
+					{'sector_id': '00071', 'job_title': 'Arts, Entertainment, and Recreation'},
+					{'sector_id': '00072', 'job_title': 'Accommodation and Food Services'},
+					{'sector_id': '00081', 'job_title': 'Other Services (except Public Administration)'},
+					{'sector_id': '00099', 'job_title': 'Unclassified'},
+					{'sector_id': '03133', 'job_title': 'Manufacturing'},
+					{'sector_id': '04445', 'job_title': 'Retail Trade'},
+					{'sector_id': '04849', 'job_title': 'Transportation and Warehousing'}];
 					
 var barColors = [ {'category' : 'Low', 'bar_color' : '#D85F02'},
                   {'category' : 'Mid', 'bar_color' : '#757083'},
@@ -485,6 +488,7 @@ var outdata = join(barLabels,indata,"sector_id","sector_id",function(dat,col){
 			   category : dat.category
 			   };
                });
+			   
 			   
 //Creating suppressed dataset
 
@@ -572,10 +576,15 @@ function fixMISS(elem1,elem2) {
 return elemOut;
 }; //end of fixMISS
 
+//fixCODE removes the dash from sector_id codes
+function fixCODE(incode) {
+	var outcode = incode.replace("-","")
+	return(outcode)
+}; //end of fixCODE
+
 
 //CHART DATA FUNCTIONS
 //genChartPromise Creates execures promises and created charts
-
 function genChartPromise(FIPS,YEAR,CTY, dimChart){
 
 //Formats
@@ -593,19 +602,30 @@ var jobsdataStr = "https://gis.dola.colorado.gov/lookups/jobs?county=" + numFIPS
 var boundaryStr = "https://gis.dola.colorado.gov/lookups/wage_bound?county=" + FIPS + "&year=" + YEAR;
 var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ FIPS + "&year=" + YEAR;
 
+
 var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
 
 
 Promise.all(prom).then(function(data){
-debugger
-console.log(data)
+
       data[0].forEach(function(d){
 		  d.area_code = zero3(d.area_code);
-		  d.sector_id = zero5(d.sector_id);
+		  d.sector_id = d.sector_id == '10' ? zero5(fixCODE('0')): zero5(fixCODE(d.sector_id));
 		  d.sector_name = d.sector_name;
 		  d.population_year = d.population_year;
 		  d.total_jobs = +d.total_jobs;
 	  });
+
+	 data[1].forEach(function(d){
+		 d.area_code = zero3(d.area_code);
+		 d.sector_id = zero5(fixCODE(d.sector_id));
+         d.avg_wage = +d.avg_wage;
+		 d.population_year = d.population_year;
+		 d.category = d.category;
+		 d.wage_source = d.wage_source;
+		 d.wage_source_override = d.wage_source_override
+	 }) 
+
 
 
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
@@ -641,11 +661,21 @@ Promise.all(prom).then(function(data){
 	 
       data[0].forEach(function(d){
 		  d.area_code = zero3(d.area_code);
-		  d.sector_id = zero5(d.sector_id);
+		  d.sector_id = d.sector_id == '10' ? zero5(fixCODE("0")) : zero5(fixCODE(d.sector_id));
 		  d.sector_name = d.sector_name;
 		  d.population_year = d.population_year;
 		  d.total_jobs = +d.total_jobs;
 	  });
+
+	  	 data[1].forEach(function(d){
+		 d.area_code = zero3(d.area_code);
+		 d.sector_id = zero5(fixCODE(d.sector_id));
+         d.avg_wage = +d.avg_wage;
+		 d.population_year = d.population_year;
+		 d.category = d.category;
+		 d.wage_source = d.wage_source;
+		 d.wage_source_override = d.wage_source_override
+	 }) 
 
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
 
@@ -712,13 +742,25 @@ var wagedataStr = "https://gis.dola.colorado.gov/lookups/wage?county="+ FIPS + "
 var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
 
 Promise.all(prom).then(function(data){
+
       data[0].forEach(function(d){
 		  d.area_code = zero3(d.area_code);
-		  d.sector_id = zero5(d.sector_id);
+		  d.sector_id = d.sector_id == "10" ? zero5(fixCODE("0")) : zero5(fixCODE(d.sector_id));
 		  d.sector_name = d.sector_name;
 		  d.population_year = d.population_year;
 		  d.total_jobs = +d.total_jobs;
 	  });
+	  
+	  	 data[1].forEach(function(d){
+		 d.area_code = zero3(d.area_code);
+		 d.sector_id = zero5(fixCODE(d.sector_id));
+         d.avg_wage = +d.avg_wage;
+		 d.population_year = d.population_year;
+		 d.category = d.category;
+		 d.wage_source = d.wage_source;
+		 d.wage_source_override = d.wage_source_override
+	 }) 
+	 
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
       var chartData2 = genData(chartData,0);
 
@@ -761,11 +803,21 @@ var prom = [d3.json(jobsdataStr),d3.json(wagedataStr)];
 Promise.all(prom).then(function(data){
       data[0].forEach(function(d){
 		  d.area_code = zero3(d.area_code);
-		  d.sector_id = zero5(d.sector_id);
+		  d.sector_id = d.sector_id == '10' ? zero5(fixCODE("0")) : zero5(fixCODE(d.sector_id));
 		  d.sector_name = d.sector_name;
 		  d.population_year = d.population_year;
 		  d.total_jobs = +d.total_jobs;
 	  });
+	 
+	 data[1].forEach(function(d){
+		 d.area_code = zero3(d.area_code);
+		 d.sector_id = zero5(fixCODE(d.sector_id));
+         d.avg_wage = +d.avg_wage;
+		 d.population_year = d.population_year;
+		 d.category = d.category;
+		 d.wage_source = d.wage_source;
+		 d.wage_source_override = d.wage_source_override
+	 }) 
 	 
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
       var chartData2 = genData(chartData,1);
@@ -844,14 +896,24 @@ var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
 
 
 Promise.all(prom).then(function(data){
+
       data[0].forEach(function(d){
 		  d.area_code = zero3(d.area_code);
-		  d.sector_id = zero5(d.sector_id);
+		  d.sector_id = d.sector_id == "10" ? zero5(fixCODE("0")) : zero5(fixCODE(d.sector_id));
 		  d.sector_name = d.sector_name;
 		  d.population_year = d.population_year;
 		  d.total_jobs = +d.total_jobs;
 	  });
 	  
+	 data[1].forEach(function(d){
+		 d.area_code = zero3(d.area_code);
+		 d.sector_id = zero5(fixCODE(d.sector_id));
+         d.avg_wage = +d.avg_wage;
+		 d.population_year = d.population_year;
+		 d.category = d.category;
+		 d.wage_source = d.wage_source;
+		 d.wage_source_override = d.wage_source_override
+	 }) 
 
 	  var jobsbYR = data[0].filter(function(d){return d.population_year == bYEAR});
 	  var jobseYR = data[0].filter(function(d){return d.population_year == eYEAR});
@@ -910,11 +972,21 @@ var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
 Promise.all(prom).then(function(data){
       data[0].forEach(function(d){
 		  d.area_code = zero3(d.area_code);
-		  d.sector_id = zero5(d.sector_id);
+		  d.sector_id = d.sector_id == '10' ? zero5(fixCODE("0")) : zero5(fixCODE(d.sector_id));
 		  d.sector_name = d.sector_name;
 		  d.population_year = d.population_year;
 		  d.total_jobs = +d.total_jobs;
 	  });
+	 
+	 data[1].forEach(function(d){
+		 d.area_code = zero3(d.area_code);
+		 d.sector_id = zero5(fixCODE(d.sector_id));
+         d.avg_wage = +d.avg_wage;
+		 d.population_year = d.population_year;
+		 d.category = d.category;
+		 d.wage_source = d.wage_source;
+		 d.wage_source_override = d.wage_source_override
+	 }) 
 
 	  var jobsbYR = data[0].filter(function(d){return d.population_year == bYEAR});
 	  var jobseYR = data[0].filter(function(d){return d.population_year == eYEAR});
@@ -929,13 +1001,12 @@ Promise.all(prom).then(function(data){
 	  var outDataeYR = genData(cDataeYR,1);
 	  
 
-
       var adjJobsbYR = createAdjData(outDatabYR[0]);
       var adjJobseYR = createAdjData(outDataeYR[0])
-	  	  
+
 	  var adjDatabYR = {
 		  	"area_code" : FIPS,
-		    "sector_id" : "00001",
+		    "sector_id" : "00000",
 			"county" : CTY,
 		    "job_title" : "Non-Suppressed Total Jobs",
 		    "avg_wage" : "",
@@ -943,19 +1014,26 @@ Promise.all(prom).then(function(data){
 		    "total_jobs": adjJobsbYR,
 			"category" : ""};
 
-
 	  var adjDataeYR = {
 		  	"area_code" : FIPS,
-		    "sector_id" : "00001",
+		    "sector_id" : "00000",
 			"county" : CTY,
 		    "job_title" : "Non-Suppressed Total Jobs",
 		    "avg_wage" : "",
 		    "population_year": eYEAR,
 		    "total_jobs": adjJobseYR,
-			"category" : ""};;
+			"category" : ""};
 		
-	  var outDatabYR2 = outDatabYR[0].concat(adjDatabYR).concat(outDatabYR[1]).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
-	  var outDataeYR2 = outDataeYR[0].concat(adjDataeYR).concat(outDataeYR[1]).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
+	  var outArrbYR = outDatabYR[0].filter(function(d) {return d.sector_id != "00000";})
+	  outArrbYR.push(adjDatabYR)
+	  outArrbYR.forEach(function(d) {d.county = CTY;})
+	  var outDatabYR2 = outArrbYR.sort((a, b) => d3.ascending(a.sector_id, b.sector_id))
+
+	  
+	  var outArreYR = outDataeYR[0].filter(function(d) {return d.sector_id != "00000";})
+	  outArreYR.push(adjDataeYR)
+	  outArreYR.forEach(function(d) {d.county = CTY;})
+	  var outDataeYR2 = outArreYR.sort((a, b) => d3.ascending(a.sector_id, b.sector_id))
 
       var dataDiff = diffData(outDatabYR2,outDataeYR2);
 
@@ -964,7 +1042,7 @@ var sup = "Suppressed";
 	  var dataOut = dataDiff.map(item => ({
 		fips_code : item.area_code,
 		county: item.county_name,
-		NAICS : item.sector_id,
+		sector_id : item.sector_id,
 		job_sector : item.job_title,
 		year_1: item.population_year1,
 		jobs_year_1: (item.total_jobs1 == 0) ? sup : Math.round(item.total_jobs1),
@@ -976,7 +1054,7 @@ var sup = "Suppressed";
 		}));
 		
 
-	 var dataOut = dataOut.sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+	 var dataOut = dataOut.sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
 
 		exportToCsv(FNAME, dataOut);
      }).catch(function(error){
@@ -990,31 +1068,31 @@ function diffData(data1, data2) {
 
 //find missing records
 
-var sector_list = [{'sector_id' : '00000'},
-	               {'sector_id' : '00001'},
-                   {'sector_id' : '01000'},
-				   {'sector_id' : '02000'},
-					{'sector_id' : '03000'},
-					{'sector_id' : '04000'},
-					{'sector_id' : '05000'},
-					{'sector_id' : '06000'},
-					{'sector_id' : '07000'},
-					{'sector_id' : '08000'},
-					{'sector_id' : '09000'},
-					{'sector_id' : '10000'},
-					{'sector_id' : '10150'},
-					{'sector_id' : '11000'},
-					{'sector_id' : '11025'},
-					{'sector_id' : '11050'},
-					{'sector_id' : '12000'},
-					{'sector_id' : '12015'},
-					{'sector_id' : '13000'},
-					{'sector_id' : '13015'},
-					{'sector_id' : '14000'},
-					{'sector_id' : '15010'},
-					{'sector_id' : '15014'},
-					{'sector_id' : '15020'},
-					{'sector_id' : '15030'}];
+var sector_list = [{ 'sector_id' : '00000'},
+					{ 'sector_id' : '00001'},
+					{ 'sector_id' : '00002'},
+					{ 'sector_id' : '00003'},
+					{ 'sector_id' : '00011'},
+					{ 'sector_id' : '00021'},
+					{ 'sector_id' : '00022'},
+					{ 'sector_id' : '00023'},
+					{ 'sector_id' : '00042'},
+					{ 'sector_id' : '00051'},
+					{ 'sector_id' : '00052'},
+					{ 'sector_id' : '00053'},
+					{ 'sector_id' : '00054'},
+					{ 'sector_id' : '00055'},
+					{ 'sector_id' : '00056'},
+					{ 'sector_id' : '00061'},
+					{ 'sector_id' : '00062'},
+					{ 'sector_id' : '00071'},
+					{ 'sector_id' : '00072'},
+					{ 'sector_id' : '00081'},
+					{ 'sector_id' : '00099'},
+					{ 'sector_id' : '03133'},
+					{ 'sector_id' : '04445'},
+					{ 'sector_id' : '04849'}]
+
 
 
 data1.sort(function(a, b){ return d3.ascending(a['sector_id'], b['sector_id']); });
@@ -1476,7 +1554,6 @@ return graph.node();
 
 //genDiffChart produces the Difference Chart
 function genDiffChart(outdata,suppressed,totalDiff,CTY,YEAR1,YEAR2,dimChart){ 
-
 
 //Comma format
 var formatComma = d3.format(",");
