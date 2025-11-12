@@ -157,8 +157,8 @@ if(type == 0){ //For the Count and Difference Tables
 		var wageN = +tdata[0].total_wage;
 		var jobsRnd = Math.round(jobsN);
 		//Scale jobsRnd
-		if(jobsRnd > 100000){
-		   var jobVal = formatDecimal(jobsRnd/100000);
+		if(jobsRnd > 1000000){
+		   var jobVal = formatDecimal(jobsRnd/1000000);
 		   var jobStr = jobVal + " Million Total Estimated Jobs";
         } else {
 		   var jobStr = formatComma(jobsRnd) + " Total Estimated Jobs";
