@@ -686,7 +686,7 @@ Promise.all(prom).then(function(data){
 	  var adjData = {
 		  	"fips_code" : FIPS,
 		    "county": CTY,
-		    "NAICS" : "00001",
+		    "sector_id" : "00001",
 		    "job_sector" : "Non-Suppressed Total Jobs",
 		    "wage_category" : "",
 		    "year": YEAR,
@@ -696,7 +696,7 @@ Promise.all(prom).then(function(data){
 	  var dataOut = chartData2[0].map(item => ({
 		fips_code : item.area_code,
 		county: CTY,
-		NAICS : item.sector_id,
+		sector_id : item.sector_id,
 		job_sector : item.job_title,
 		wage_category : item.category,
 		year: item.population_year,
@@ -707,16 +707,16 @@ if(chartData2[1].length > 1){ //Has supressions
 		var suppressed = chartData2[1].map(item => ({
 		fips_code : item.area_code,
 		county: CTY,
-		NAICS : item.sector_id,
+		sector_id : item.sector_id,
 		job_sector : item.job_title,
 		wage_category : item.category,
 		year: item.population_year,
 		wage : (item.avg_wage == null) ? "Suppressed" : formatDollar(item.avg_wage), 
 		jobs: "Suppressed"}));
 		
-		var dataOut = dataOut.concat(adjData).concat(suppressed).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+		var dataOut = dataOut.concat(adjData).concat(suppressed).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
 } else{
-	  var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+	  var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
       }
 		exportToCsv(FNAME, dataOut);
      }).catch(function(error){
@@ -829,7 +829,7 @@ Promise.all(prom).then(function(data){
 	  var adjData = {
 		  	"fips_code" : FIPS,
 		    "county": CTY,
-		    "NAICS" : "00001",
+		    "sector_id" : "00001",
 		    "job_sector" : "Non-Suppressed Total Jobs",
 		    "wage_category" : "",
 		    "year": YEAR,
@@ -846,7 +846,7 @@ Promise.all(prom).then(function(data){
 	  var dataOut = chartData3.map(item => ({
 		fips_code : item.area_code,
 		county: CTY,
-		NAICS : item.sector_id,
+		sector_id : item.sector_id,
 		job_sector : item.job_title,
 		wage_category : item.category,
 		year: item.population_year,
@@ -858,7 +858,7 @@ if(chartData2[1].length > 1){
 	var suppressed = chartData2[1].map(item => ({
 		fips_code : item.area_code,
 		county: CTY,
-		NAICS : item.sector_id,
+		sector_id : item.sector_id,
 		job_sector : item.job_title,
 		wage_category : item.category,
 		year: item.population_year,
@@ -867,9 +867,9 @@ if(chartData2[1].length > 1){
 		percentage : "Suppressed"}));
 	
 		
-		var dataOut = dataOut.concat(adjData).concat(suppressed).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+		var dataOut = dataOut.concat(adjData).concat(suppressed).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
        } else {
-	    var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.NAICS, b.NAICS));
+	    var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
        }
 		exportToCsv(FNAME, dataOut);
      }).catch(function(error){
@@ -1108,7 +1108,7 @@ var res2 = unmatchedArray(sector_list,data2);
 			   area_code : dat.area_code,
 			   sector_id: dat.sector_id,
 			   county: (dat != undefined) ? dat.county : col.county,
-			   NAICS : (dat != undefined) ? dat.sector_id : col.sector_id,
+			   sector_id : (dat != undefined) ? dat.sector_id : col.sector_id,
 			   job_title1:  col.job_title,
 			   job_title2: dat.job_title,
 			   population_year1: (col != undefined) ? col.population_year : 0,
