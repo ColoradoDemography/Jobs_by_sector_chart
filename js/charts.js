@@ -94,7 +94,6 @@ function extendAxis(indata){
 }
 
 //captionTxt specifies the chart caption
-
 function captionTxt(suppress, posY) {
 
 	//Date Format
@@ -106,17 +105,19 @@ function captionTxt(suppress, posY) {
    
    var capTxt = [
                   {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2024.",  "ypos" :posY + 14},    //Update this line as the production date changes
-				  {"captxt" : dateStr,  "ypos" : posY + 28}
+		          {"captxt" : "Data Source:  State Demography Office and Bureau of Labor Statistics",  "ypos" :posY + 14},
+				  {"captxt": "Vintage 2024 Estimates.","ypos" :posY + 28},  //Update this line as the production date changes
+				  {"captxt" : dateStr,  "ypos" : posY + 40}
 				 ];
    } else {
 //Output suppression lists
+
 var supList = [];
 var N1 = "captxt";
 var N2 = "ypos";
 for(row = 0; row < suppress.length; row++){
     var obj = {};
-	var yp = posY + 25 + eval(row * 10);
+	var yp = posY + 25 + eval(row * 15);
 	var ctxt = suppress[row].job_title;
 	obj[N1] = ctxt;
 	obj[N2] = yp;
@@ -126,11 +127,12 @@ for(row = 0; row < suppress.length; row++){
 
    var capTxthead = [
                   {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-				  {"captxt" : "Supressed Job Sectors:", "ypos" : posY+ 15}]
+				  {"captxt" : "Suppressed Job Sectors:", "ypos" : yp + 20}]
 				  
    var capTxttail = [
-		          {"captxt" : "Data Source:  Bureau of Labor Statistics Source Date: July, 2024.",  "ypos" : yp + 20},    //Update this line as the production date changes
-				  {"captxt" : dateStr,  "ypos" : yp + 30}
+		          {"captxt" : "Data Source:  State Demography Office and Bureau of Labor Statistics.",  "ypos" : yp + 35},    
+				  {"captxt": "Vintage 2024 Estimates.","ypos" : yp + 50},  //Update this line as the production date changes
+				  {"captxt" : dateStr,  "ypos" : yp + 65}
 				 ];
 var capTxt = capTxthead.concat(supList).concat(capTxttail);
    };
@@ -139,7 +141,7 @@ return(capTxt);
 };
 
 //jobsHdr appends the jobs table objects into the svg 
-function jobsHdr(tdata,yr,posLen,bSpace,bHeight,jobsD,xPos, type){
+function jobsHdr(tdata,supp_pct,yr,posLen,bSpace,bHeight,jobsD,xPos, type){
 
 //Comma format
 var formatComma = d3.format(",");
@@ -163,34 +165,36 @@ if(type == 0){ //For the Count and Difference Tables
         } else {
 		   var jobStr = formatComma(jobsRnd) + " Total Estimated Jobs";
         };
-		var wageVal = formatDollar(wageN);
-        var wageStr = wageVal + " Average Annual Wage";
+		
+		var suppPct = "Jobs Suppressed: "+ formatPercent(supp_pct) + " Percent";
+        var wageStr = formatDollar(wageN) + " Average Annual Wage";
         var yrStr = yr + " Employment Share by Wage";
 
 	var outArr = [{"color" : "#FFFFFF","text" : jobStr, "ypos" : rectanchorY + (bSpace + bHeight + 1)},
-		          {"color" : "#FFFFFF","text" : wageStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 15)},
-				  {"color" : "#FFFFFF","text" : yrStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 30)}];
+			      {"color" : "#FFFFFF","text" : suppPct, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 15)},
+		          {"color" : "#FFFFFF","text" : wageStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 30)},
+				  {"color" : "#FFFFFF","text" : yrStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 45)}];
     for(i = 0; i < tdata.length; i++) {
 		//Modification for new labels 12/2023
 		// var tabStr = "(" + formatDollar(tdata[i].min_wage) + " - " + formatDollar(tdata[i].max_wage) + ") " + formatPercent(tdata[i].pct_jobs);
 		var tabStr = tdata[i].label ;
 		if(tdata[i].category == 'Low'){
-			outArr.push({"color" : "#D85F02", "text" : " Low Wage Jobs: " +tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 45)});
+			outArr.push({"color" : "#5BB5FF", "text" : " Low Wage Jobs: " +tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 60)});
 		};
 		if(tdata[i].category == 'Mid'){
-			outArr.push({"color" : "#757083", "text" : " Mid Wage Jobs: " + tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 60)});
+			outArr.push({"color" : "#007ADE", "text" : " Mid Wage Jobs: " + tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 75)});
 		};
 		if(tdata[i].category == 'High'){
-			outArr.push({"color" : "#1B9E77", "text" : " High Wage Jobs: " + tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 75)});
+			outArr.push({"color" : "#001970", "text" : " High Wage Jobs: " + tabStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 90)});
 		};
 	} //i
      } else {
 //round jobs value and output string
 var tabtxt = formatComma(Math.round(jobsD)) + " Total Employment Change";
 var outArr = [ {"color" : "#FFFFFF","text" : tabtxt, "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 1)},
-			   {"color" : '#D85F02',"text" : "Less than 80% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 2)},
-			   {"color" : '#757083', "text" : "Between 81% to 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 3)},
-			   {"color" : '#1B9E77', "text" : "Greater than 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 4)}];
+			   {"color" : '#5BB5FF',"text" : "Less than 80% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 2)},
+			   {"color" : '#007ADE', "text" : "Between 81% to 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 3)},
+			   {"color" : '#001970', "text" : "Greater than 120% of Average Weekly Wage", "ypos" : rectanchorY + ((bSpace + bHeight + 1) * 4)}];
  } //if
 
 return outArr;
@@ -402,10 +406,11 @@ return fips;
 //Join function from http://learnjsdata.com/combine_data.html
 
 function join(lookupTable, mainTable, lookupKey, mainKey, select) {
-    var l = lookupTable.length,
-        m = mainTable.length,
-        lookupIndex = [],
-        output = [];
+    var l = lookupTable.length;
+    var m = mainTable.length;
+    var lookupIndex = [];
+    var output = [];
+	
     for (var i = 0; i < l; i++) { // loop through l items
         var row = lookupTable[i];
         lookupIndex[row[lookupKey]] = row; // create an index for lookup table
@@ -413,29 +418,41 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
     for (var j = 0; j < m; j++) { // loop through m items
         var y = mainTable[j];
         var x = lookupIndex[y[mainKey]]; // get corresponding row from lookupTable
+		if(typeof x === 'undefined') {
+			var x= [];
+			x.push({"area_code" : y.area_code,
+		"sector_id" : y.sector_id,
+		"population_year" : y.population_year,
+		"total_jobs" : 0})
+		}
         output.push(select(y, x)); // select only the columns you need
     }
+	
     return output;
 };
 
 //buildData creates the basic data set
 function buildData(jData,wData){
 
-	
-	var jData_f = jData.filter(function(d) {return d.sector_id != '00092';});
-	
-	var outData = join(jData_f,wData,"sector_id","sector_id",function(dat,col){
+	jData.sort(function(a, b){ return d3.ascending(+a['sector_id'], +b['sector_id']); })
+	wData.sort(function(a, b){ return d3.ascending(+a['sector_id'], +b['sector_id']); })
+
+var outData = join(jData,wData,"sector_id","sector_id",function(dat,col){
 		return{
 			area_code : col.area_code,
 			sector_id : col.sector_id,
 			population_year : col.population_year,
 			total_jobs : col.total_jobs,
-			avg_wage : (dat !== undefined) ? dat.avg_wage : 0,
-			category : (dat !== undefined) ? dat.category : ""
+			avg_wage : (dat.avg_wage !== undefined) ? dat.avg_wage : 0,
+			category : (dat.category !== undefined) ? dat.category : ""
 		};
 	});
+	
+	
 
-return(outData);
+var outData2 = outData.filter(function(d) {return d.area_code !== undefined;});
+console.log(outData2)
+return(outData2);
 } //End buildData
 
 //genData processes the data for the static chart
@@ -468,9 +485,9 @@ function genData(indata, TYPE) {
 					{'sector_id': '04445', 'job_title': 'Retail Trade'},
 					{'sector_id': '04849', 'job_title': 'Transportation and Warehousing'}];
 					
-var barColors = [ {'category' : 'Low', 'bar_color' : '#D85F02'},
-                  {'category' : 'Mid', 'bar_color' : '#757083'},
-				  {'category' : 'High', 'bar_color' : '#1B9E77'}
+var barColors = [ {'category' : 'Low', 'bar_color' : '#5BB5FF'},
+                  {'category' : 'Mid', 'bar_color' : '#007ADE'},
+				  {'category' : 'High', 'bar_color' : '#001970'}
 				  ];
 				  
 	
@@ -534,7 +551,6 @@ return [outdata, suppressed];
 
 //createAdjData calculates percentage from processed data...
 function createAdjData(jobsdata){
-
 var chartData3 = jobsdata.filter(function(d) {return d.sector_id != "00000";});
 var adjJobs = d3.rollup(chartData3, v => d3.sum(v, d => d.total_jobs));
 return(adjJobs);
@@ -627,12 +643,21 @@ Promise.all(prom).then(function(data){
 	 }) 
 
 
-
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
 
-      var chartData2 = genData(chartData,0);
+	  var chartData2 = genData(chartData,0);
+	  
+	   var adjJobs = createAdjData(chartData2[0]);
 
-	  genCountChart(chartData2[0],chartData2[1],data[2],CTY,YEAR,dimChart); //Generates a bar chart
+	  var totJobsarr = chartData.filter(function(d) {return d.sector_id == "00000";});
+	  var totJobs = totJobsarr.map(function(d) {return d.total_jobs;})
+	  var supJobsPCT = (totJobs - adjJobs)/totJobs;
+
+//Fixing Total Jobs...
+data[2].forEach(d => {d.sum_jobs = +totJobs})
+
+
+	  genCountChart(chartData2[0],chartData2[1],supJobsPCT,data[2],CTY,YEAR,dimChart); //Generates a bar chart
      }).catch(function(error){
 		 console.log("Process Error genChartPromise");
 	 });
@@ -680,19 +705,34 @@ Promise.all(prom).then(function(data){
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
 
       var chartData2 = genData(chartData,1);
-	  
+	
 	  var adjJobs = createAdjData(chartData2[0]);
+
+	  var totJobsarr = chartData2[0].filter(function(d) {return d.sector_id == "00000";});
+	  var totJobs = totJobsarr.map(function(d) {return d.total_jobs;})
+	  var supJobs = totJobs - adjJobs;
 	  
 	  var adjData = {
 		  	"fips_code" : FIPS,
 		    "county": CTY,
-		    "sector_id" : "00001",
+		    "sector_id" : "00000.1",
 		    "job_sector" : "Non-Suppressed Total Jobs",
 		    "wage_category" : "",
 		    "year": YEAR,
 		    "wage" : "",
 		    "jobs": formatComma(Math.round(adjJobs))};
 
+	  var supData = {
+		"fips_code" : FIPS,
+		"county": CTY,
+		"sector_id" : "00000.2",
+		"job_sector" : "Total Suppressed Jobs",
+		"wage_category" : "",
+		"year": YEAR,
+		"wage" : "",
+		"jobs": formatComma(Math.round(supJobs))};
+			
+	
 	  var dataOut = chartData2[0].map(item => ({
 		fips_code : item.area_code,
 		county: CTY,
@@ -714,9 +754,9 @@ if(chartData2[1].length > 1){ //Has supressions
 		wage : (item.avg_wage == null) ? "Suppressed" : formatDollar(item.avg_wage), 
 		jobs: "Suppressed"}));
 		
-		var dataOut = dataOut.concat(adjData).concat(suppressed).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
+		var dataOut = dataOut.concat(adjData).concat(supData).concat(suppressed).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
 } else{
-	  var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
+	  var dataOut = dataOut.concat(adjData).concat(supData).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
       }
 		exportToCsv(FNAME, dataOut);
      }).catch(function(error){
@@ -761,20 +801,26 @@ Promise.all(prom).then(function(data){
 		 d.wage_source_override = d.wage_source_override
 	 }) 
 	 
+
 	  var chartData = buildData(data[0],data[1]); //These two function calls create the data set that will be charted
       var chartData2 = genData(chartData,0);
+	  var chartData3 = chartData2[0]
 
-	  var chartData3 = chartData2[0];
       var supr = chartData2[1]
 	  // Calculating the adjusted base
 
       var adjJobs = createAdjData(chartData3);
+
+	  var totJobsarr = data[0].filter(function(d) {return d.sector_id == "00000";});
+	  var totJobs = totJobsarr.map(function(d) {return d.total_jobs})
+	  var supJobsPCT = (totJobs - adjJobs)/totJobs;
 	  
-	  chartData3.forEach(function(d){
-		  d.pct_jobs = +d.total_jobs/adjJobs;
+	  
+	   chartData3.forEach(function(d){
+		  d.pct_jobs = +d.total_jobs/+totJobs;
 	  });
- 
-	  genPCTChart(chartData3,supr,data[2],CTY,YEAR,dimChart); //Generates a bar chart
+
+	  genPCTChart(chartData3,supr,supJobsPCT,data[2],CTY,YEAR,dimChart); //Generates a bar chart
      }).catch(function(error){
 		 console.log("Process Error genPCTPromise");
 	 });
@@ -823,24 +869,38 @@ Promise.all(prom).then(function(data){
       var chartData2 = genData(chartData,1);
 
 	  var chartData3 = chartData2[0];
-	  
+ 
       var adjJobs = createAdjData(chartData3);
-	  
+	  var totJobsarr = chartData2[0].filter(function(d) {return d.sector_id == "00000";});
+	  var totJobs = totJobsarr.map(function(d) {return d.total_jobs})	  
+
 	  var adjData = {
-		  	"fips_code" : FIPS,
-		    "county": CTY,
-		    "sector_id" : "00001",
-		    "job_sector" : "Non-Suppressed Total Jobs",
-		    "wage_category" : "",
-		    "year": YEAR,
-		    "wage" : "",
-		    "jobs": formatComma(Math.round(adjJobs)),
-		    "percentage" : formatPercent(1)};
+		"fips_code" : FIPS,
+		"county": CTY,
+		"sector_id" : "00000.1",
+		"job_sector" : "Non-Suppressed Total Jobs",
+		"wage_category" : "",
+		"year": YEAR,
+		"wage" : "",
+		"jobs": formatComma(Math.round(adjJobs)),
+		"percentage" : formatPercent(adjJobs/totJobs)
+		};
+		
+	  var supData = {
+		"fips_code" : FIPS,
+		"county": CTY,
+		"sector_id" : "00000.2",
+		"job_sector" : "Total Suppressed Jobs",
+		"wage_category" : "",
+		"year": YEAR,
+		"wage" : "",
+		"jobs": formatComma(Math.round(totJobs - adjJobs)),
+		"percentage" : formatPercent((totJobs - adjJobs)/totJobs)};
 			
 
 	  
 	  chartData3.forEach(function(d){
-		  d.pct_jobs = +d.total_jobs/adjJobs;
+		  d.pct_jobs = +d.total_jobs/totJobs;
 	  });
 	  
 	  var dataOut = chartData3.map(item => ({
@@ -866,10 +926,9 @@ if(chartData2[1].length > 1){
 		jobs: "Suppressed",
 		percentage : "Suppressed"}));
 	
-		
-		var dataOut = dataOut.concat(adjData).concat(suppressed).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
+		var dataOut = dataOut.concat(adjData).concat(supData).concat(suppressed).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
        } else {
-	    var dataOut = dataOut.concat(adjData).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
+	    var dataOut = dataOut.concat(adjData).concat(supData).sort((a, b) => d3.ascending(a.sector_id, b.sector_id));
        }
 		exportToCsv(FNAME, dataOut);
      }).catch(function(error){
@@ -921,6 +980,7 @@ Promise.all(prom).then(function(data){
 	  var wagebYR = data[1].filter(function(d) {return d.population_year == bYEAR});
 	  var wageeYR = data[1].filter(function(d) {return d.population_year == eYEAR});
 
+
 	  var cDatabYR = buildData(jobsbYR,wagebYR); 
 	  var cDataeYR = buildData(jobseYR,wageeYR);
 	  
@@ -928,10 +988,17 @@ Promise.all(prom).then(function(data){
 	  var outDataeYR = genData(cDataeYR,0);
 
       var dataDiff = diffData(outDatabYR[0],outDataeYR[0]);
+	  console.log(dataDiff)
 	  var dataDiff = dataDiff.filter(function(d){return ((d.total_jobs1 != 0) && (d.total_jobs2 != 0))});
 
 	  //Generate unique supressed categories  outDatabYR[1] and outDataeYR[1] are the supresssed categories
-	  var fullSup = outDatabYR[1].concat(outDataeYR[1]);
+	  if(outDataeYR[1].length <= 1){
+		 var fullSup = outDatabYR[1];
+	  } else if(outDatabYR[1].length <= 1){
+		  var fullSup = outDataeYR[1];
+	  } else {
+	     var fullSup = outDatabYR[1].concat(outDataeYR[1]);
+	  }
 	  if (fullSup.length > 2) {
 		  var fullSup2 = fullSup.map(item => ({
 					job_title : item.job_title
@@ -970,6 +1037,7 @@ var prom = [d3.json(jobsdataStr),d3.json(wagedataStr),d3.json(boundaryStr)];
 
 
 Promise.all(prom).then(function(data){
+
       data[0].forEach(function(d){
 		  d.area_code = zero3(d.area_code);
 		  d.sector_id = d.sector_id == '10' ? zero5(fixCODE("0")) : zero5(fixCODE(d.sector_id));
@@ -1002,11 +1070,20 @@ Promise.all(prom).then(function(data){
 	  
 
       var adjJobsbYR = createAdjData(outDatabYR[0]);
-      var adjJobseYR = createAdjData(outDataeYR[0])
+      var adjJobseYR = createAdjData(outDataeYR[0]);
+	  
+	  //total jobs
+	  var totJobsarrb = jobsbYR.filter(function(d) {return d.sector_id == "00000";});
+	  var totJobsbYR = totJobsarrb.map(function(d) {return d.total_jobs})
+	  var supJobsPCTbYR = (totJobsbYR - adjJobsbYR)/totJobsbYR;
+	  
+	  var totJobsarre = jobseYR.filter(function(d) {return d.sector_id == "00000";});
+	  var totJobseYR = totJobsarre.map(function(d) {return d.total_jobs})
+	  var supJobsPCTeYR = (totJobseYR - adjJobseYR)/totJobseYR;
 
 	  var adjDatabYR = {
 		  	"area_code" : FIPS,
-		    "sector_id" : "00000",
+		    "sector_id" : "00000.1",
 			"county" : CTY,
 		    "job_title" : "Non-Suppressed Total Jobs",
 		    "avg_wage" : "",
@@ -1016,22 +1093,44 @@ Promise.all(prom).then(function(data){
 
 	  var adjDataeYR = {
 		  	"area_code" : FIPS,
-		    "sector_id" : "00000",
+		    "sector_id" : "00000.1",
 			"county" : CTY,
 		    "job_title" : "Non-Suppressed Total Jobs",
 		    "avg_wage" : "",
 		    "population_year": eYEAR,
 		    "total_jobs": adjJobseYR,
 			"category" : ""};
+			
+	var adjDatabYR_sup = {
+		"area_code" : FIPS,
+		"sector_id" : "00000.2",
+		"county" : CTY,
+		"job_title" : "Suppressed Total Jobs",
+		"avg_wage" : "",
+		"population_year": bYEAR,
+		"total_jobs": totJobsbYR - adjJobsbYR,
+		"category" : ""};
+
+	  var adjDataeYR_sup = {
+		  	"area_code" : FIPS,
+		    "sector_id" : "00000.1",
+			"county" : CTY,
+		    "job_title" : "Suppressed Total Jobs",
+		    "avg_wage" : "",
+		    "population_year": eYEAR,
+		    "total_jobs": totJobseYR - adjJobseYR,
+			"category" : ""};
 		
 	  var outArrbYR = outDatabYR[0].filter(function(d) {return d.sector_id != "00000";})
 	  outArrbYR.push(adjDatabYR)
+	  outArrbYR.push(adjDatabYR_sup)
 	  outArrbYR.forEach(function(d) {d.county = CTY;})
 	  var outDatabYR2 = outArrbYR.sort((a, b) => d3.ascending(a.sector_id, b.sector_id))
 
 	  
 	  var outArreYR = outDataeYR[0].filter(function(d) {return d.sector_id != "00000";})
 	  outArreYR.push(adjDataeYR)
+	  outArreYR.push(adjDataeYR_sup)
 	  outArreYR.forEach(function(d) {d.county = CTY;})
 	  var outDataeYR2 = outArreYR.sort((a, b) => d3.ascending(a.sector_id, b.sector_id))
 
@@ -1299,7 +1398,7 @@ genDiffPromise(seldFIPS,begYEAR,endYEAR,seldCTY,dimChart);
 }; //updateDiffChart
 
 //genCountChart produces the Total Jobs chart
-function genCountChart(outdata,suppressed,tabdata,CTY,YEAR,dimChart){ 
+function genCountChart(outdata,suppressed,supp_pct,tabdata,CTY,YEAR,dimChart){ 
 
 //Comma format
 var formatComma = d3.format(",");
@@ -1394,7 +1493,7 @@ caption.selectAll("text")
 //Table
 
 var pos = x_axis(0);
-var tabArray = jobsHdr(tabdata,YEAR,yLen,dimChart[0].barSpace,dimChart[0].barHeight,0,pos, 0);
+var tabArray = jobsHdr(tabdata,supp_pct,YEAR,yLen,dimChart[0].barSpace,dimChart[0].barHeight,0,pos, 0);
 
 
     var rectanchorX = dimChart[0].width * .7;
@@ -1426,7 +1525,7 @@ return graph.node();
 };  //end of genCountChart
 
 //genPCTChart produces the Total Jobs chart
-function genPCTChart(outdata,suppressed,tabdata,CTY,YEAR,dimChart){ 
+function genPCTChart(outdata,suppressed,supp_pct,tabdata,CTY,YEAR,dimChart){ 
 
 //Comma format
 var formatComma = d3.format(",");
@@ -1484,7 +1583,7 @@ bars.append("rect")
 	   .style("fill", function(d) { return d.bar_color});
 
 bars.append("text")
-       .attr("x", function(d) { return x_axis(+d.pct_jobs); })
+       .attr("x", function(d) { return x_axis(+d.pct_jobs) + 5; })
        .attr("y", function(d,i) {return y_axis(d.job_title) + 5; })
        .attr("dy", ".35em")
        .text(function(d) { return formatPercent(+d.pct_jobs); })
@@ -1520,10 +1619,9 @@ caption.selectAll("text")
 
 //Table
 var pos = x_axis(0);
-var tabArray = jobsHdr(tabdata,YEAR,yLen,dimChart[0].barSpace,dimChart[0].barHeight,0,pos, 0);
+var tabArray = jobsHdr(tabdata,supp_pct,YEAR,yLen,dimChart[0].barSpace,dimChart[0].barHeight,0,pos, 0);
 
-
- var rectanchorX = dimChart[0].width * .7;
+   var rectanchorX = dimChart[0].width * .7;
 
 
 var table =  graph.append("g")
