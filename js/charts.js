@@ -1233,7 +1233,7 @@ outData2.forEach( function(d) {d.job_title = fixMISS(d.job_title1,d.job_title2);
 outData2.forEach( function(d) {d.category = fixMISS(d.caregory1,d.category2);});
 outData2.forEach( function(d) {d.bar_color = fixMISS(d.bar_color1,d.bar_color2);});
 
-outData2.sort(function(a, b){ return d3.ascending(a['sector_id'], b['sector_id']); })
+outData2.sort(function(a, b){ return d3.descending(+a['diffJobs'], +b['diffJobs']); })
 return(outData2);
 };
 
