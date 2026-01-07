@@ -451,7 +451,7 @@ var outData = join(jData,wData,"sector_id","sector_id",function(dat,col){
 	
 
 var outData2 = outData.filter(function(d) {return d.area_code !== undefined;});
-console.log(outData2)
+
 return(outData2);
 } //End buildData
 
@@ -988,7 +988,6 @@ Promise.all(prom).then(function(data){
 	  var outDataeYR = genData(cDataeYR,0);
 
       var dataDiff = diffData(outDatabYR[0],outDataeYR[0]);
-	  console.log(dataDiff)
 	  var dataDiff = dataDiff.filter(function(d){return ((d.total_jobs1 != 0) && (d.total_jobs2 != 0))});
 
 	  //Generate unique supressed categories  outDatabYR[1] and outDataeYR[1] are the supresssed categories
@@ -1113,7 +1112,7 @@ Promise.all(prom).then(function(data){
 
 	  var adjDataeYR_sup = {
 		  	"area_code" : FIPS,
-		    "sector_id" : "00000.1",
+		    "sector_id" : "00000.2",
 			"county" : CTY,
 		    "job_title" : "Suppressed Total Jobs",
 		    "avg_wage" : "",
@@ -1142,7 +1141,7 @@ var sup = "Suppressed";
 		fips_code : item.area_code,
 		county: item.county_name,
 		sector_id : item.sector_id,
-		job_sector : item.job_title,
+		job_sector : item.job_title1,
 		year_1: item.population_year1,
 		jobs_year_1: (item.total_jobs1 == 0) ? sup : Math.round(item.total_jobs1),
 		wage_category_year_1 : item.category1,
@@ -1168,6 +1167,8 @@ function diffData(data1, data2) {
 //find missing records
 
 var sector_list = [{ 'sector_id' : '00000'},
+					{"sector_id" : "00000.1"},
+					{"sector_id" : "00000.2"},
 					{ 'sector_id' : '00001'},
 					{ 'sector_id' : '00002'},
 					{ 'sector_id' : '00003'},
@@ -1201,7 +1202,7 @@ var res1 = unmatchedArray(sector_list,data1);
 data2.sort(function(a, b){ return d3.ascending(a['sector_id'], b['sector_id']); });
 var res2 = unmatchedArray(sector_list,data2);
 
-
+debugger
   var outData = join(res1,res2,"sector_id","sector_id", function(dat,col){
            return{
 			   area_code : dat.area_code,
@@ -1225,7 +1226,6 @@ var res2 = unmatchedArray(sector_list,data2);
 
 outData.forEach(function(d) { d.diffJobs = Math.round(d.total_jobs2) - Math.round(d.total_jobs1)});
 
-
 //Fixing MISSING values
 outData2 = outData.filter( function(d) { if(!((d.job_title1 == "MISSING" && d.job_title2 == "MISSING"))){ return d;}});
 
@@ -1233,7 +1233,7 @@ outData2.forEach( function(d) {d.job_title = fixMISS(d.job_title1,d.job_title2);
 outData2.forEach( function(d) {d.category = fixMISS(d.caregory1,d.category2);});
 outData2.forEach( function(d) {d.bar_color = fixMISS(d.bar_color1,d.bar_color2);});
 
-outData2.sort(function(a, b){ return d3.descending(+a['diffJobs'], +b['diffJobs']); })
+outData2.sort(function(a, b){ return d3.ascending(a['sector_id'], b['sector_id']); })
 return(outData2);
 };
 
