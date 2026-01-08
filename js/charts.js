@@ -94,7 +94,7 @@ function extendAxis(indata){
 }
 
 //captionTxt specifies the chart caption
-function captionTxt(suppress, posY) {
+function captionTxt(suppress, supp_pct, posY) {
 
 	//Date Format
    var formatDate = d3.timeFormat("%m/%d/%Y");
@@ -117,7 +117,7 @@ var N1 = "captxt";
 var N2 = "ypos";
 for(row = 0; row < suppress.length; row++){
     var obj = {};
-	var yp = posY + 25 + eval(row * 15);
+	var yp = posY + 45 + eval(row * 15);
 	var ctxt = suppress[row].job_title;
 	obj[N1] = ctxt;
 	obj[N2] = yp;
@@ -127,7 +127,8 @@ for(row = 0; row < suppress.length; row++){
 
    var capTxthead = [
                   {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-				  {"captxt" : "Suppressed Job Sectors:", "ypos" : yp + 20}]
+				  {"captxt" : "Percent Jobs Suppressed: "+ formatPercent(supp_pct), "ypos" : posY + 15],
+				  {"captxt" : "Suppressed Job Sectors:", "ypos" : posY + 30},
 				  
    var capTxttail = [
 		          {"captxt" : "Data Source:  State Demography Office and Bureau of Labor Statistics.",  "ypos" : yp + 35},    
@@ -141,7 +142,7 @@ return(capTxt);
 };
 
 //jobsHdr appends the jobs table objects into the svg 
-function jobsHdr(tdata,supp_pct,yr,posLen,bSpace,bHeight,jobsD,xPos, type){
+function jobsHdr(tdata,yr,posLen,bSpace,bHeight,jobsD,xPos, type){
 
 //Comma format
 var formatComma = d3.format(",");
@@ -171,9 +172,9 @@ if(type == 0){ //For the Count and Difference Tables
         var yrStr = yr + " Employment Share by Wage";
 
 	var outArr = [{"color" : "#FFFFFF","text" : jobStr, "ypos" : rectanchorY + (bSpace + bHeight + 1)},
-			      {"color" : "#FFFFFF","text" : suppPct, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 15)},
-		          {"color" : "#FFFFFF","text" : wageStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 30)},
-				  {"color" : "#FFFFFF","text" : yrStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 45)}];
+		          {"color" : "#FFFFFF","text" : wageStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 15)},
+				  {"color" : "#FFFFFF","text" : yrStr, "ypos" : rectanchorY + ((bSpace + bHeight + 1) + 30)}];
+				  
     for(i = 0; i < tdata.length; i++) {
 		//Modification for new labels 12/2023
 		// var tabStr = "(" + formatDollar(tdata[i].min_wage) + " - " + formatDollar(tdata[i].max_wage) + ") " + formatPercent(tdata[i].pct_jobs);
@@ -1399,7 +1400,7 @@ genDiffPromise(seldFIPS,begYEAR,endYEAR,seldCTY,dimChart);
 
 //genCountChart produces the Total Jobs chart
 function genCountChart(outdata,suppressed,supp_pct,tabdata,CTY,YEAR,dimChart){ 
-
+debugger;
 //Comma format
 var formatComma = d3.format(",");
 //Dollar Format
@@ -1474,10 +1475,10 @@ graph.append("g")
       .call(d3.axisLeft(y_axis));
 	  
 
-//caption  s
+//captions
 
-
-var captionStr = captionTxt(suppressed, yLen + 100);
+debugger;
+var captionStr = captionTxt(suppressed, supp_pct, yLen + 100);
 var caption =  graph.append("g")
 	     .attr("class","captionobj");
 caption.selectAll("text")
@@ -1493,7 +1494,7 @@ caption.selectAll("text")
 //Table
 
 var pos = x_axis(0);
-var tabArray = jobsHdr(tabdata,supp_pct,YEAR,yLen,dimChart[0].barSpace,dimChart[0].barHeight,0,pos, 0);
+var tabArray = jobsHdr(tabdata,YEAR,yLen,dimChart[0].barSpace,dimChart[0].barHeight,0,pos, 0);
 
 
     var rectanchorX = dimChart[0].width * .7;
