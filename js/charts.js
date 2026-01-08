@@ -98,20 +98,24 @@ function captionTxt(suppress, supp_pct, posY) {
 
 	//Date Format
    var formatDate = d3.timeFormat("%m/%d/%Y");
+   var formatPercent = d3.format(".1%")
    
    var dateStr = "Visualization by the State Demography Office, Print Date: "+ formatDate(new Date);
 
    if(suppress.length <= 2){
    
    var capTxt = [
-                  {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-		          {"captxt" : "Data Source:  State Demography Office and Bureau of Labor Statistics",  "ypos" :posY + 14},
-				  {"captxt": "Vintage 2024 Estimates.","ypos" :posY + 28},  //Update this line as the production date changes
-				  {"captxt" : dateStr,  "ypos" : posY + 40}
+		          {"captxt" : "Data Source:  State Demography Office and Bureau of Labor Statistics",  "ypos" :posY},
+				  {"captxt": "Vintage 2024 Estimates.","ypos" :posY + 15},  //Update this line as the production date changes
+				  {"captxt" : dateStr,  "ypos" : posY + 30}
 				 ];
    } else {
 //Output suppression lists
 
+   var capTxthead = [
+                  {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
+				  {"captxt" : "Percent Jobs Suppressed: "+ formatPercent(supp_pct), "ypos" : posY + 15},
+				  {"captxt" : "Suppressed Job Sectors:", "ypos" : posY + 30}]
 var supList = [];
 var N1 = "captxt";
 var N2 = "ypos";
@@ -125,11 +129,6 @@ for(row = 0; row < suppress.length; row++){
 };
   
 
-   var capTxthead = [
-                  {"captxt" : "Job sector data is suppressed according to Bureau of Labor Statistics standards.", "ypos" : posY},
-				  {"captxt" : "Percent Jobs Suppressed: "+ formatPercent(supp_pct), "ypos" : posY + 15],
-				  {"captxt" : "Suppressed Job Sectors:", "ypos" : posY + 30},
-				  
    var capTxttail = [
 		          {"captxt" : "Data Source:  State Demography Office and Bureau of Labor Statistics.",  "ypos" : yp + 35},    
 				  {"captxt": "Vintage 2024 Estimates.","ypos" : yp + 50},  //Update this line as the production date changes
@@ -167,7 +166,7 @@ if(type == 0){ //For the Count and Difference Tables
 		   var jobStr = formatComma(jobsRnd) + " Total Estimated Jobs";
         };
 		
-		var suppPct = "Jobs Suppressed: "+ formatPercent(supp_pct) + " Percent";
+		
         var wageStr = formatDollar(wageN) + " Average Annual Wage";
         var yrStr = yr + " Employment Share by Wage";
 
@@ -1203,7 +1202,7 @@ var res1 = unmatchedArray(sector_list,data1);
 data2.sort(function(a, b){ return d3.ascending(a['sector_id'], b['sector_id']); });
 var res2 = unmatchedArray(sector_list,data2);
 
-debugger
+
   var outData = join(res1,res2,"sector_id","sector_id", function(dat,col){
            return{
 			   area_code : dat.area_code,
@@ -1400,7 +1399,7 @@ genDiffPromise(seldFIPS,begYEAR,endYEAR,seldCTY,dimChart);
 
 //genCountChart produces the Total Jobs chart
 function genCountChart(outdata,suppressed,supp_pct,tabdata,CTY,YEAR,dimChart){ 
-debugger;
+
 //Comma format
 var formatComma = d3.format(",");
 //Dollar Format
@@ -1477,7 +1476,7 @@ graph.append("g")
 
 //captions
 
-debugger;
+
 var captionStr = captionTxt(suppressed, supp_pct, yLen + 100);
 var caption =  graph.append("g")
 	     .attr("class","captionobj");
